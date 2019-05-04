@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+
+<title>Getting started with vroom</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; position: absolute; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; }
+pre.numberSource a.sourceLine:empty
+  { position: absolute; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: absolute; left: -5em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' || rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Getting started with vroom</h1>
+
+
+
+<p>The vroom package contains one function <code>vroom()</code> which is used to read all types of delimited files. A delimited file is any file in which the data is separated (delimited) by one or more characters.</p>
+<p>The most common type of delimited files are CSV (Comma Separated Values) files, typically these files have a <code>.csv</code> suffix.</p>
+<div id="reading-files" class="section level2">
+<h2>reading files</h2>
+<p>To read a CSV, or other type of delimited file with vroom pass the file to <code>vroom()</code>. The delimiter will be automatically guessed if it is a common delimiter. If the guessing fails or you are using a less common delimiter specify it with <code>delim = &quot;,&quot;</code>.</p>
+<p>We have included an example CSV file in the vroom package. Access it with <code>vroom_example(&quot;mtcars.csv&quot;)</code></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(vroom)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co"># See where the example file is stored on your machine</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">file &lt;-<span class="st"> </span><span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">file</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="co">#&gt; [1] &quot;.../inst/extdata/mtcars.csv&quot;</span></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="co"># Read the file, by default vroom will guess the delimiter automatically.</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="kw">vroom</span>(file)</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="co">#&gt; 1 Mazda …  21       6   160   110  3.9   2.62  16.5     0     1     4     4</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="co">#&gt; 2 Mazda …  21       6   160   110  3.9   2.88  17.0     0     1     4     4</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="co">#&gt; 3 Datsun…  22.8     4   108    93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="co">#&gt; # … with 29 more rows</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co"># You can also specify it explicitly, which is (slightly) faster, and safer if</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="co"># you know how the file is delimited.</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="kw">vroom</span>(file, <span class="dt">delim =</span> <span class="st">&quot;,&quot;</span>)</a>
+<a class="sourceLine" id="cb1-21" data-line-number="21"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb1-24" data-line-number="24"><span class="co">#&gt; 1 Mazda …  21       6   160   110  3.9   2.62  16.5     0     1     4     4</span></a>
+<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="co">#&gt; 2 Mazda …  21       6   160   110  3.9   2.88  17.0     0     1     4     4</span></a>
+<a class="sourceLine" id="cb1-26" data-line-number="26"><span class="co">#&gt; 3 Datsun…  22.8     4   108    93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+</div>
+<div id="reading-multiple-files" class="section level2">
+<h2>reading multiple files</h2>
+<p>If you are reading a set of (CSV or otherwise delimited) files which all have the same columns, you can pass all the filenames directly to <code>vroom()</code> and it will combine them into one result.</p>
+<p>First we will create some files to read by splitting the mtcars dataset by number of cylinders, (it is OK if you don’t currently understand this code).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">mt &lt;-<span class="st"> </span>tibble<span class="op">::</span><span class="kw">rownames_to_column</span>(mtcars, <span class="st">&quot;model&quot;</span>)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">purrr<span class="op">::</span><span class="kw">iwalk</span>(</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">  <span class="kw">split</span>(mt, mt<span class="op">$</span>cyl),</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">  <span class="op">~</span><span class="st"> </span>readr<span class="op">::</span><span class="kw">write_csv</span>(.x, glue<span class="op">::</span><span class="kw">glue</span>(<span class="st">&quot;mtcars_{.y}.csv&quot;</span>))</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">)</a></code></pre></div>
+<p>We can then efficiently read them into one result by passing the filenames directly to vroom.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">files &lt;-<span class="st"> </span>fs<span class="op">::</span><span class="kw">dir_ls</span>(<span class="dt">glob =</span> <span class="st">&quot;mtcars*csv&quot;</span>)</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">files</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co">#&gt; mtcars_4.csv mtcars_6.csv mtcars_8.csv</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="kw">vroom</span>(files)</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="co">#&gt; 1 Datsun…  22.8     4  108     93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb3-9" data-line-number="9"><span class="co">#&gt; 2 Merc 2…  24.4     4  147.    62  3.69  3.19  20       1     0     4     2</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10"><span class="co">#&gt; 3 Merc 2…  22.8     4  141.    95  3.92  3.15  22.9     1     0     4     2</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<p>Often the filename or directory the files are in contains information about the contents, in this case the <code>id</code> parameter can be used to add an extra column (in this case named <code>path</code>) to the result that contains the file path.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">vroom</span>(files, <span class="dt">id =</span> <span class="st">&quot;path&quot;</span>)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="co">#&gt; # A tibble: 32 x 13</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5"><span class="co">#&gt; 1 Datsun…  22.8     4  108     93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="co">#&gt; 2 Merc 2…  24.4     4  147.    62  3.69  3.19  20       1     0     4     2</span></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="co">#&gt; 3 Merc 2…  22.8     4  141.    95  3.92  3.15  22.9     1     0     4     2</span></a>
+<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="co">#&gt; # … with 29 more rows, and 1 more variable: path &lt;chr&gt;</span></a></code></pre></div>
+</div>
+<div id="reading-compressed-files" class="section level2">
+<h2>reading compressed files</h2>
+<p>vroom supports reading zip, gz, bz2 and xz compressed files automatically, just pass the filename of the compressed file to vroom.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1">file &lt;-<span class="st"> </span><span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv.gz&quot;</span>)</a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">vroom</span>(file)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co">#&gt; 1 Mazda …  21       6   160   110  3.9   2.62  16.5     0     1     4     4</span></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="co">#&gt; 2 Mazda …  21       6   160   110  3.9   2.88  17.0     0     1     4     4</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co">#&gt; 3 Datsun…  22.8     4   108    93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+</div>
+<div id="reading-remote-files" class="section level2">
+<h2>reading remote files</h2>
+<p>vroom can read files from the internet as well by passing the URL of the file to vroom.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">file &lt;-<span class="st"> &quot;https://raw.githubusercontent.com/jimhester/vroom/master/inst/extdata/mtcars.csv&quot;</span></a>
+<a class="sourceLine" id="cb6-2" data-line-number="2"><span class="kw">vroom</span>(file)</a></code></pre></div>
+<p>It can even read gzipped files from the internet (although currently not the other compressed formats).</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">file &lt;-<span class="st"> &quot;https://raw.githubusercontent.com/jimhester/vroom/master/inst/extdata/mtcars.csv.gz&quot;</span></a>
+<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="kw">vroom</span>(file)</a></code></pre></div>
+</div>
+<div id="column-skipping" class="section level2">
+<h2>column skipping</h2>
+<p>vroom uses the <code>col_keep</code> and <code>col_skip</code> parameters to control which columns to keep or skip in the output. Both parameters can take input in 3 different ways.</p>
+<ul>
+<li>character vector of column names</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="kw">vroom</span>(file, <span class="dt">col_keep =</span> <span class="kw">c</span>(<span class="st">&quot;model&quot;</span>, <span class="st">&quot;cyl&quot;</span>, <span class="st">&quot;gear&quot;</span>))</a>
+<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="co">#&gt; # A tibble: 32 x 3</span></a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co">#&gt;   model           cyl  gear</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb8-5" data-line-number="5"><span class="co">#&gt; 1 Mazda RX4         6     4</span></a>
+<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="co">#&gt; 2 Mazda RX4 Wag     6     4</span></a>
+<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="co">#&gt; 3 Datsun 710        4     4</span></a>
+<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<ul>
+<li>numeric vector of column indexes, e.g. <code>c(1, 2, 5)</code></li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">vroom</span>(file, <span class="dt">col_keep =</span> <span class="kw">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">11</span>))</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="co">#&gt; # A tibble: 32 x 3</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="co">#&gt;   model           cyl  gear</span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="co">#&gt; 1 Mazda RX4         6     4</span></a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="co">#&gt; 2 Mazda RX4 Wag     6     4</span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="co">#&gt; 3 Datsun 710        4     4</span></a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<ul>
+<li>logical vector</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">vroom</span>(file, <span class="dt">col_keep =</span> <span class="kw">c</span>(<span class="ot">TRUE</span>, <span class="ot">FALSE</span>, <span class="ot">TRUE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">FALSE</span>, <span class="ot">TRUE</span>, <span class="ot">FALSE</span>))</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="co">#&gt; # A tibble: 32 x 3</span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="co">#&gt;   model           cyl  gear</span></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="co">#&gt; 1 Mazda RX4         6     4</span></a>
+<a class="sourceLine" id="cb10-6" data-line-number="6"><span class="co">#&gt; 2 Mazda RX4 Wag     6     4</span></a>
+<a class="sourceLine" id="cb10-7" data-line-number="7"><span class="co">#&gt; 3 Datsun 710        4     4</span></a>
+<a class="sourceLine" id="cb10-8" data-line-number="8"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<p><code>col_skip</code> works in the same way, but has the opposite effect.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">vroom</span>(file, <span class="dt">col_skip =</span> <span class="dv">5</span><span class="op">:</span><span class="dv">12</span>)</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="co">#&gt; # A tibble: 32 x 4</span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="co">#&gt;   model           mpg   cyl  disp</span></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="co">#&gt; 1 Mazda RX4      21       6   160</span></a>
+<a class="sourceLine" id="cb11-6" data-line-number="6"><span class="co">#&gt; 2 Mazda RX4 Wag  21       6   160</span></a>
+<a class="sourceLine" id="cb11-7" data-line-number="7"><span class="co">#&gt; 3 Datsun 710     22.8     4   108</span></a>
+<a class="sourceLine" id="cb11-8" data-line-number="8"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+</div>
+<div id="column-types" class="section level2">
+<h2>column types</h2>
+<p>vroom guesses the data types of columns as they are read, however sometimes it is necessary to change the type of one or more columns.</p>
+<p>The available specifications are: (with single letter abbreviations in quotes)</p>
+<ul>
+<li><code>col_logical()</code> ‘l’, containing only <code>T</code>, <code>F</code>, <code>TRUE</code>, <code>FALSE</code>, <code>1</code> or <code>0</code>.</li>
+<li><code>col_integer()</code> ‘i’, integer values.</li>
+<li><code>col_double()</code> ‘d’, floating point values.</li>
+<li><code>col_character()</code> ‘c’, everything else.</li>
+<li><code>col_factor(levels, ordered)</code> ‘f’, a fixed set of values.</li>
+<li><code>col_skip()</code> ’_, -’, don’t import this column.</li>
+<li><code>col_guess()</code> ‘?’, parse using the “best” type based on the input.</li>
+</ul>
+<p>You can tell vroom what columns to use with the <code>col_types()</code> argument in a number of ways.</p>
+<p>If you only need to override a single column the most consise way is to use a named vector.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="co"># read the 'hp' columns as an integer</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2"><span class="kw">vroom</span>(<span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>), <span class="dt">col_types =</span> <span class="kw">c</span>(<span class="dt">hp =</span> <span class="st">&quot;i&quot;</span>))</a>
+<a class="sourceLine" id="cb12-3" data-line-number="3"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb12-4" data-line-number="4"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb12-5" data-line-number="5"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb12-6" data-line-number="6"><span class="co">#&gt; 1 Mazda …  21       6   160   110  3.9   2.62  16.5     0     1     4     4</span></a>
+<a class="sourceLine" id="cb12-7" data-line-number="7"><span class="co">#&gt; 2 Mazda …  21       6   160   110  3.9   2.88  17.0     0     1     4     4</span></a>
+<a class="sourceLine" id="cb12-8" data-line-number="8"><span class="co">#&gt; 3 Datsun…  22.8     4   108    93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb12-9" data-line-number="9"><span class="co">#&gt; # … with 29 more rows</span></a>
+<a class="sourceLine" id="cb12-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb12-11" data-line-number="11"><span class="co"># also skip reading the 'cyl' column</span></a>
+<a class="sourceLine" id="cb12-12" data-line-number="12"><span class="kw">vroom</span>(<span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>), <span class="dt">col_types =</span> <span class="kw">c</span>(<span class="dt">hp =</span> <span class="st">&quot;i&quot;</span>, <span class="dt">cyl =</span> <span class="st">&quot;_&quot;</span>))</a>
+<a class="sourceLine" id="cb12-13" data-line-number="13"><span class="co">#&gt; # A tibble: 32 x 11</span></a>
+<a class="sourceLine" id="cb12-14" data-line-number="14"><span class="co">#&gt;   model           mpg  disp    hp  drat    wt  qsec    vs    am  gear  carb</span></a>
+<a class="sourceLine" id="cb12-15" data-line-number="15"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb12-16" data-line-number="16"><span class="co">#&gt; 1 Mazda RX4      21     160   110  3.9   2.62  16.5     0     1     4     4</span></a>
+<a class="sourceLine" id="cb12-17" data-line-number="17"><span class="co">#&gt; 2 Mazda RX4 Wag  21     160   110  3.9   2.88  17.0     0     1     4     4</span></a>
+<a class="sourceLine" id="cb12-18" data-line-number="18"><span class="co">#&gt; 3 Datsun 710     22.8   108    93  3.85  2.32  18.6     1     1     4     1</span></a>
+<a class="sourceLine" id="cb12-19" data-line-number="19"><span class="co">#&gt; # … with 29 more rows</span></a>
+<a class="sourceLine" id="cb12-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb12-21" data-line-number="21"><span class="co"># also read the gears as a factor</span></a>
+<a class="sourceLine" id="cb12-22" data-line-number="22"><span class="kw">vroom</span>(<span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>), <span class="dt">col_types =</span> <span class="kw">c</span>(<span class="dt">hp =</span> <span class="st">&quot;i&quot;</span>, <span class="dt">cyl =</span> <span class="st">&quot;_&quot;</span>, <span class="dt">gear =</span> <span class="st">&quot;f&quot;</span>))</a>
+<a class="sourceLine" id="cb12-23" data-line-number="23"><span class="co">#&gt; # A tibble: 32 x 11</span></a>
+<a class="sourceLine" id="cb12-24" data-line-number="24"><span class="co">#&gt;   model           mpg  disp    hp  drat    wt  qsec    vs    am gear   carb</span></a>
+<a class="sourceLine" id="cb12-25" data-line-number="25"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb12-26" data-line-number="26"><span class="co">#&gt; 1 Mazda RX4      21     160   110  3.9   2.62  16.5     0     1 4         4</span></a>
+<a class="sourceLine" id="cb12-27" data-line-number="27"><span class="co">#&gt; 2 Mazda RX4 Wag  21     160   110  3.9   2.88  17.0     0     1 4         4</span></a>
+<a class="sourceLine" id="cb12-28" data-line-number="28"><span class="co">#&gt; 3 Datsun 710     22.8   108    93  3.85  2.32  18.6     1     1 4         1</span></a>
+<a class="sourceLine" id="cb12-29" data-line-number="29"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<p>However you can also use the <code>col_*()</code> functions in a list.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb13-1" data-line-number="1"><span class="kw">vroom</span>(</a>
+<a class="sourceLine" id="cb13-2" data-line-number="2">  <span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>),</a>
+<a class="sourceLine" id="cb13-3" data-line-number="3">  <span class="dt">col_types =</span> <span class="kw">list</span>(<span class="dt">hp =</span> <span class="kw">col_integer</span>(), <span class="dt">cyl =</span> <span class="kw">col_skip</span>(), <span class="dt">gear =</span> <span class="kw">col_factor</span>())</a>
+<a class="sourceLine" id="cb13-4" data-line-number="4">)</a>
+<a class="sourceLine" id="cb13-5" data-line-number="5"><span class="co">#&gt; # A tibble: 32 x 11</span></a>
+<a class="sourceLine" id="cb13-6" data-line-number="6"><span class="co">#&gt;   model           mpg  disp    hp  drat    wt  qsec    vs    am gear   carb</span></a>
+<a class="sourceLine" id="cb13-7" data-line-number="7"><span class="co">#&gt;   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb13-8" data-line-number="8"><span class="co">#&gt; 1 Mazda RX4      21     160   110  3.9   2.62  16.5     0     1 4         4</span></a>
+<a class="sourceLine" id="cb13-9" data-line-number="9"><span class="co">#&gt; 2 Mazda RX4 Wag  21     160   110  3.9   2.88  17.0     0     1 4         4</span></a>
+<a class="sourceLine" id="cb13-10" data-line-number="10"><span class="co">#&gt; 3 Datsun 710     22.8   108    93  3.85  2.32  18.6     1     1 4         1</span></a>
+<a class="sourceLine" id="cb13-11" data-line-number="11"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+<p>This is most useful when a column type needs additional information, such as for categorical data when you know all of the levels of a factor.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1"><span class="kw">vroom</span>(</a>
+<a class="sourceLine" id="cb14-2" data-line-number="2">  <span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>),</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3">  <span class="dt">col_types =</span> <span class="kw">list</span>(<span class="dt">gear =</span> <span class="kw">col_factor</span>(<span class="dt">levels =</span> <span class="kw">c</span>(<span class="dt">gear =</span> <span class="kw">c</span>(<span class="st">&quot;3&quot;</span>, <span class="st">&quot;4&quot;</span>, <span class="st">&quot;5&quot;</span>))))</a>
+<a class="sourceLine" id="cb14-4" data-line-number="4">)</a>
+<a class="sourceLine" id="cb14-5" data-line-number="5"><span class="co">#&gt; # A tibble: 32 x 12</span></a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"><span class="co">#&gt;   model     mpg   cyl  disp    hp  drat    wt  qsec    vs    am gear   carb</span></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7"><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb14-8" data-line-number="8"><span class="co">#&gt; 1 Mazda …  21       6   160   110  3.9   2.62  16.5     0     1 4         4</span></a>
+<a class="sourceLine" id="cb14-9" data-line-number="9"><span class="co">#&gt; 2 Mazda …  21       6   160   110  3.9   2.88  17.0     0     1 4         4</span></a>
+<a class="sourceLine" id="cb14-10" data-line-number="10"><span class="co">#&gt; 3 Datsun…  22.8     4   108    93  3.85  2.32  18.6     1     1 4         1</span></a>
+<a class="sourceLine" id="cb14-11" data-line-number="11"><span class="co">#&gt; # … with 29 more rows</span></a></code></pre></div>
+</div>
+<div id="further-reading" class="section level2">
+<h2>Further reading</h2>
+<p><code>vignette(&quot;benchmarks&quot;)</code> discusses the performance of vroom, how it compares to alternatives and how it achieves its results.</p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
