@@ -319,6 +319,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </ul></li>
 <li>Skipping particular columns.</li>
 <li>Specifying column types, for additional safety and when the automatic guessing fails.</li>
+<li>Writing regular and compressed files</li>
 </ul>
 <div id="reading-files" class="section level2">
 <h2>Reading files</h2>
@@ -327,7 +328,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># See where the example file is stored on your machine</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2">file &lt;-<span class="st"> </span><span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>)</a>
 <a class="sourceLine" id="cb2-3" data-line-number="3">file</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">#&gt; [1] &quot;/private/var/folders/dt/r5s12t392tb5sk181j3gs4zw0000gn/T/RtmpNKYObI/Rinstc7bf241f2270/vroom/extdata/mtcars.csv&quot;</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">#&gt; [1] &quot;/private/var/folders/dt/r5s12t392tb5sk181j3gs4zw0000gn/T/RtmpMIeGNk/Rinstcdb1feece36/vroom/extdata/mtcars.csv&quot;</span></a>
 <a class="sourceLine" id="cb2-5" data-line-number="5"></a>
 <a class="sourceLine" id="cb2-6" data-line-number="6"><span class="co"># Read the file, by default vroom will guess the delimiter automatically.</span></a>
 <a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">vroom</span>(file)</a>
@@ -441,7 +442,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </div>
 <div id="column-selection" class="section level2">
 <h2>Column selection</h2>
-<p>vroom provides the same interface for column selection and renaming as [dplyr::select()]. This provides very flexible and readable selections.</p>
+<p>vroom provides the same interface for column selection and renaming as <a href="https://dplyr.tidyverse.org/reference/select.html">dplyr::select()</a>. This provides very flexible and readable selections.</p>
 <ul>
 <li>A character vector of column names</li>
 </ul>

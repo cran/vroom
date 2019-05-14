@@ -17,7 +17,7 @@ status](https://www.r-pkg.org/badges/version/vroom)](https://cran.r-project.org/
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- badges: end -->
 
-The fastest delimited reader for R, **905.64 MB/sec/sec**.
+The fastest delimited reader for R, **936.19 MB/sec/sec**.
 
 But that’s impossible\! How can it be [so
 fast](http://vroom.r-lib.org/articles/benchmarks.html)?
@@ -27,17 +27,18 @@ indexes where each record is located so it can be read later. The
 vectors returned use the [Altrep
 framework](https://svn.r-project.org/R/branches/ALTREP/ALTREP.html) to
 lazily load the data on-demand when it is accessed, so you only pay for
-what you use.
+what you use. This lazy access is done automatically, so no changes to
+your R data-manipulation code are needed.
 
 vroom also uses multiple threads for indexing, materializing
 non-character columns, and when writing to further improve performance.
 
-| package    |    version | time (sec) | speedup |    throughput |
-| :--------- | ---------: | ---------: | ------: | ------------: |
-| vroom      | 0.0.0.9000 |       1.84 |   44.28 | 905.64 MB/sec |
-| data.table |     1.12.2 |      15.72 |    5.18 | 106.04 MB/sec |
-| readr      |      1.3.1 |      33.09 |    2.46 |  50.37 MB/sec |
-| read.delim |      3.5.3 |      81.49 |    1.00 |  20.45 MB/sec |
+| package    | version | time (sec) | speedup |    throughput |
+| :--------- | ------: | ---------: | ------: | ------------: |
+| vroom      |   1.0.1 |       1.78 |   46.98 | 936.19 MB/sec |
+| data.table |  1.12.2 |      15.81 |    5.29 | 105.40 MB/sec |
+| readr      |   1.3.1 |      33.86 |    2.47 |  49.23 MB/sec |
+| read.delim |   3.5.3 |      83.64 |    1.00 |  19.93 MB/sec |
 
 ## Features
 
@@ -71,7 +72,14 @@ files, including
 
 ## Installation
 
-Install the development version from [GitHub](https://github.com/) with:
+Install vroom from CRAN with:
+
+``` r
+install.packages("vroom")
+```
+
+Alternatively, if you need the development version from
+[GitHub](https://github.com/) install it with:
 
 ``` r
 # install.packages("devtools")
@@ -200,16 +208,12 @@ There are also individual variables for each type. Currently only
 
 ## RStudio caveats
 
-RStudio’s environment pane auto-refresh behavior calls `object.size()`
-which for Altrep objects can be extremely slow. This was fixed in
-[RStudio\#4210](https://github.com/rstudio/rstudio/pull/4210) and
-[RStudio\#4292](https://github.com/rstudio/rstudio/pull/4292), so it is
-recommended you use a [daily version](https://dailies.rstudio.com/) if
-you are trying to use vroom inside RStudio. For older versions a
-workaround is to use the ‘Manual Refresh Only’ option in the environment
-pane.
-
-![](https://user-images.githubusercontent.com/470418/51357022-95a1f280-1a82-11e9-8035-3687c8fd5dd8.png)
+RStudio’s environment pane calls `object.size()` when it refreshes the
+pane, which for Altrep objects can be extremely slow. RStudio 1.2.1335+
+includes the fixes
+([RStudio\#4210](https://github.com/rstudio/rstudio/pull/4210),
+[RStudio\#4292](https://github.com/rstudio/rstudio/pull/4292)) for this
+issue, so so it is recommended you use at least that version.
 
 ## Thanks
 
