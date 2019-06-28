@@ -56,3 +56,13 @@ compare.tbl_df <- function (x, y, ...) {
 is_rstudio_console <- function() {
   !(Sys.getenv("RSTUDIO", "") == "" || Sys.getenv("RSTUDIO_TERM", "") != "")
 }
+
+is_rstudio_version <- function(min, max = Inf) {
+  tryCatch(
+    expr = {
+      version <- rstudioapi::getVersion()
+      version >= min && version < max
+    },
+    error = function(e) FALSE
+  )
+}

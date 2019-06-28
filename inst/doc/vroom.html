@@ -328,7 +328,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co"># See where the example file is stored on your machine</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2">file &lt;-<span class="st"> </span><span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>)</a>
 <a class="sourceLine" id="cb2-3" data-line-number="3">file</a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">#&gt; [1] &quot;/private/var/folders/dt/r5s12t392tb5sk181j3gs4zw0000gn/T/RtmpMIeGNk/Rinstcdb1feece36/vroom/extdata/mtcars.csv&quot;</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">#&gt; [1] &quot;/private/var/folders/dt/r5s12t392tb5sk181j3gs4zw0000gn/T/Rtmp8DDqWj/Rinst1c917f24b7a0/vroom/extdata/mtcars.csv&quot;</span></a>
 <a class="sourceLine" id="cb2-5" data-line-number="5"></a>
 <a class="sourceLine" id="cb2-6" data-line-number="6"><span class="co"># Read the file, by default vroom will guess the delimiter automatically.</span></a>
 <a class="sourceLine" id="cb2-7" data-line-number="7"><span class="kw">vroom</span>(file)</a>
@@ -612,10 +612,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <li><code>col_logical()</code> ‘l’, containing only <code>T</code>, <code>F</code>, <code>TRUE</code>, <code>FALSE</code>, <code>1</code> or <code>0</code>.</li>
 <li><code>col_integer()</code> ‘i’, integer values.</li>
 <li><code>col_double()</code> ‘d’, floating point values.</li>
-<li><code>col_number()</code> [n], numbers containing the <code>grouping_mark</code></li>
-<li><code>col_date(format = &quot;&quot;)</code> [D]: with the locale’s <code>date_format</code>.</li>
-<li><code>col_time(format = &quot;&quot;)</code> [t]: with the locale’s <code>time_format</code>.</li>
-<li><code>col_datetime(format = &quot;&quot;)</code> [T]: ISO8601 date times.</li>
+<li><code>col_number()</code> ‘n’, numbers containing the <code>grouping_mark</code></li>
+<li><code>col_date(format = &quot;&quot;)</code> ‘D’: with the locale’s <code>date_format</code>.</li>
+<li><code>col_time(format = &quot;&quot;)</code> ‘t’: with the locale’s <code>time_format</code>.</li>
+<li><code>col_datetime(format = &quot;&quot;)</code> ‘T’: ISO8601 date times.</li>
 <li><code>col_factor(levels, ordered)</code> ‘f’, a fixed set of values.</li>
 <li><code>col_character()</code> ‘c’, everything else.</li>
 <li><code>col_skip()</code> ’_, -’, don’t import this column.</li>
@@ -694,7 +694,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb24-3" data-line-number="3"><span class="kw">vroom_write</span>(mtcars, <span class="st">&quot;mtcars.tsv.bz2&quot;</span>)</a>
 <a class="sourceLine" id="cb24-4" data-line-number="4"></a>
 <a class="sourceLine" id="cb24-5" data-line-number="5"><span class="kw">vroom_write</span>(mtcars, <span class="st">&quot;mtcars.tsv.xz&quot;</span>)</a></code></pre></div>
-<p>It is also possible to use other compressors, such as <a href="https://zlib.net/pigz/">pigz</a> a parallel gzip implementation, <a href="http://lbzip2.org/">lbzip2</a> a parallel bzip2 implementation or <a href="https://github.com/vasi/pixz">pixz</a> a parallel xz implementation by using <code>pipe()</code> to create a pipe connection. The parallel versions can be considerably faster for large output files.</p>
+<p>It is also possible to use other compressors, such as <a href="https://zlib.net/pigz/">pigz</a>, a parallel gzip implementation, lbzip2, a parallel bzip2 implementation or <a href="https://github.com/vasi/pixz">pixz</a>, a parallel xz implementation by using <code>pipe()</code> to create a pipe connection. The parallel versions can be considerably faster for large output files.</p>
 <div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" data-line-number="1"><span class="kw">vroom_write</span>(mtcars, <span class="kw">pipe</span>(<span class="st">&quot;pigz &gt; mtcars.tsv.gz&quot;</span>))</a></code></pre></div>
 </div>
 </div>

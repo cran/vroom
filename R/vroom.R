@@ -28,19 +28,16 @@ NULL
 #'   [vroom_altrep_opts()] for for full details.
 #' @export
 #' @examples
-#' \dontshow{
-#' .old_wd <- setwd(tempdir())
-#' mt <- vroom(vroom_example("mtcars.csv"))
-#' vroom_write(mt, "mtcars.tsv")
-#' vroom_write(mt, "mtcars.tsv.gz")
-#' vroom_write(mt, "mtcars.tsv.bz2")
-#' }
+#' # Show path to example file
+#' input_file <- vroom_example("mtcars.csv")
+#'
+#' # Read from a path
 #'
 #' # Input sources -------------------------------------------------------------
 #' # Read from a path
-#' vroom("mtcars.tsv")
-#' vroom("mtcars.tsv.gz")
-#' vroom("mtcars.tsv.bz2")
+#' vroom(input_file)
+#' # You can also use literal paths directly
+#' # vroom("mtcars.csv")
 #'
 #' \dontrun{
 #' # Including remote paths
@@ -52,14 +49,14 @@ NULL
 #'
 #' # Column selection ----------------------------------------------------------
 #' # Pass column names or indexes directly to select them
-#' vroom("mtcars.tsv", col_select = c(model, cyl, gear))
-#' vroom("mtcars.tsv", col_select = c(1, 3, 11))
+#' vroom(input_file, col_select = c(model, cyl, gear))
+#' vroom(input_file, col_select = c(1, 3, 11))
 #'
 #' # Or use the selection helpers
-#' vroom("mtcars.tsv", col_select = starts_with("d"))
+#' vroom(input_file, col_select = starts_with("d"))
 #'
 #' # You can also rename specific columns
-#' vroom("mtcars.tsv", col_select = list(car = model, everything()))
+#' vroom(input_file, col_select = list(car = model, everything()))
 #'
 #' # Column types --------------------------------------------------------------
 #' # By default, vroom guesses the columns types, looking at 1000 rows
@@ -77,10 +74,6 @@ NULL
 #' vroom("a\tb\n1.0\t2.0\n")
 #' # Other delimiters
 #' vroom("a|b\n1.0|2.0\n", delim = "|")
-#' \dontshow{
-#' unlink(c("mtcars.tsv", "mtcars.tsv.gz", "mtcars.tsv.bz2"))
-#' setwd(.old_wd)
-#' }
 vroom <- function(file, delim = NULL, col_names = TRUE, col_types = NULL,
   col_select = NULL,
   id = NULL, skip = 0, n_max = Inf,
@@ -173,7 +166,8 @@ vroom_progress <- function() {
 pb_file_format <- function(filename) {
 
   # Workaround RStudio bug https://github.com/rstudio/rstudio/issues/4777
-  withr::with_options(list(crayon.enabled = !is_rstudio_console() && getOption("crayon.enabled", TRUE)),
+  # TODO: change this version number from 1.3 once it is in a patch release
+  withr::with_options(list(crayon.enabled = (!is_rstudio_console() || is_rstudio_version("1.2.1522", "1.3")) && getOption("crayon.enabled", TRUE)),
     glue::glue_col("{bold}indexing{reset} {blue}{basename(filename)}{reset} [:bar] {green}:rate{reset}, eta: {cyan}:eta{reset}")
   )
 }
@@ -184,13 +178,13 @@ pb_width <- function(format) {
 }
 
 pb_connection_format <- function(unused) {
-  withr::with_options(list(crayon.enabled = !is_rstudio_console() && getOption("crayon.enabled", TRUE)),
+  withr::with_options(list(crayon.enabled = (!is_rstudio_console() || is_rstudio_version("1.2.1522", "1.3")) && getOption("crayon.enabled", TRUE)),
     glue::glue_col("{bold}indexed{reset} {green}:bytes{reset} in {cyan}:elapsed{reset}, {green}:rate{reset}")
   )
 }
 
 pb_write_format <- function(unused) {
-  withr::with_options(list(crayon.enabled = !is_rstudio_console() && getOption("crayon.enabled", TRUE)),
+  withr::with_options(list(crayon.enabled = (!is_rstudio_console() || is_rstudio_version("1.2.1522", "1.3")) && getOption("crayon.enabled", TRUE)),
     glue::glue_col("{bold}wrote{reset} {green}:bytes{reset} in {cyan}:elapsed{reset}, {green}:rate{reset}")
   )
 }
@@ -230,9 +224,18 @@ guess_delim <- function(lines, delims = c(",", "\t", " ", "|", ":", ";", "\n")) 
   delims[[res]]
 }
 
+cached <- new.env(emptyenv())
 
 vroom_threads <- function() {
-  as.integer(Sys.getenv("VROOM_THREADS", parallel::detectCores()))
+  res <- as.integer(
+    Sys.getenv("VROOM_THREADS",
+      cached$num_threads <- cached$num_threads %||% parallel::detectCores()
+    )
+  )
+  if (is.na(res) || res <= 0) {
+    res <- 1
+  }
+  res
 }
 
 vroom_tempfile <- function() {
@@ -248,7 +251,7 @@ vroom_tempfile <- function() {
 #' `vroom_altrep_opts()` can be used directly as input to the `altrep_opts`
 #' argument of [vroom()].
 #'
-#' Altrenatively there is also a family of environment variables to control use of
+#' Alternatively there is also a family of environment variables to control use of
 #' the Altrep framework. These can then be set in your `.Renviron` file, e.g.
 #' with [usethis::edit_r_environ()]. For versions of R where the Altrep
 #' framework is unavailable (R < 3.5.0) they are automatically turned off and

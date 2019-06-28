@@ -18,9 +18,31 @@ read_benchmark <- function(file, desc) {
   vroom::vroom(file, col_types = c("cccdddd")) %>%
     filter(type == "real", op != "setup") %>%
     mutate(
-      package = fct_reorder(sub("_", "\n", package), time, sum),
-      op = factor(op, desc)
-    )
+      method = case_when(
+        package == "data.table" ~ "data.table",
+        package == "readr" ~ "dplyr",
+        package == "read.delim" ~ "base",
+        package == "write.delim" ~ "base",
+        grepl("^vroom", package) ~ sub(".*_", "", package)
+        ),
+      altrep = case_when(
+        grepl("^vroom [(]full altrep[)]", package) ~ "full",
+        grepl("^vroom [(]no altrep[)]", package) ~ "none",
+        grepl("^vroom_", package) ~ "normal",
+        TRUE ~ NA_character_
+        ),
+      package = case_when(
+        grepl("^vroom", package) ~ "vroom",
+        TRUE ~ package
+      ),
+    label = fct_reorder(
+      glue::glue("{package}{altrep}\n{method}",
+        altrep = ifelse(is.na(altrep), "", glue::glue("(altrep: {altrep})"))
+      ),
+      time,
+      sum),
+    op = factor(op, desc)
+  )
 }
 
 generate_subtitle <- function(data) {
@@ -37,23 +59,22 @@ plot_benchmark <- function(data, title) {
   data %>%
     filter(package != "read.delim") %>%
     ggplot() +
-    geom_bar(aes(x = package, y = time, fill = op, group = package), stat = "identity") +
+    geom_bar(aes(x = label, y = time, fill = op, group = label), stat = "identity") +
     scale_fill_brewer(type = "qual", palette = "Set2") +
-    scale_y_continuous(labels = function(x) format(bench::as_bench_time(x))) +
+    scale_y_continuous(labels = scales::number_format(suffix = "s")) +
     theme(legend.position = "bottom") +
     coord_flip() +
     labs(title = title, subtitle = subtitle, x = NULL, y = NULL, fill = NULL)
 }
 
 make_table <- function(data) {
-  times <- data %>%
-    group_by(package, op) %>%
-    filter(type == "real") %>%
-    tally(wt = time) %>%
-    spread(op, n) %>%
-    mutate(total = sum(read, print, head, tail, sample, filter, aggregate))
-
-  times %>%
+  data %>%
+    select(-label, -type, -size, -rows, -cols) %>%
+    spread(op, time) %>%
+    mutate(
+      total = read + print + head + tail + sample + filter + aggregate,
+    ) %>%
+    rename(manip = method) %>%
     arrange(desc(total)) %>%
     mutate_if(is.numeric, pretty_sec) %>%
     knitr::kable(digits = 2, align = "r", format = "html")
@@ -82,30 +103,44 @@ plot_benchmark(all_chr, "Time to analyze all character data")
 
 make_table(all_chr)
 
+## ---- echo = FALSE, message = FALSE--------------------------------------
+mult <- read_benchmark(system.file("bench", "taxi_multiple-times.tsv", package = "vroom"), desc)
+
 ## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
-desc_w <- c("uncompressed", "gzip", "multithreaded gzip")
+plot_benchmark(mult, "Time to analyze multiple file data")
+
+make_table(mult)
+
+## ---- echo = FALSE, message = FALSE--------------------------------------
+fwf <- read_benchmark(system.file("bench", "fwf-times.tsv", package = "vroom"), desc)
+
+## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+plot_benchmark(fwf, "Time to analyze fixed width data")
+
+make_table(fwf)
+
+## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+desc_w <- rev(c("xz", "gzip", "multithreaded gzip", "zstandard", "uncompressed"))
 taxi_writing <- read_benchmark(system.file("bench", "taxi_writing-times.tsv", package = "vroom"), desc_w) %>%
-  spread(op, time) %>%
-  arrange(!is.na(`multithreaded gzip`), desc(`multithreaded gzip`)) %>%
-  mutate(package = fct_rev(fct_inorder(package)))
+  mutate(package = factor(package, c("write.delim", "readr", "data.table", "vroom")))
 
 subtitle <- generate_subtitle(taxi_writing)
 
 taxi_writing %>%
-  select(-size, -rows, -cols, -type) %>%
-  gather(op, time, -package) %>%
-  mutate(op = factor(op, desc_w)) %>%
-  ggplot() +
-  geom_bar(aes(x = package, y = time, fill = op), stat = "identity", position = position_dodge2(preserve = "single", reverse = TRUE)) +
+  ggplot(aes(x = op, y = time, fill = package)) +
+  geom_bar(stat = "identity", position = position_dodge2(reverse = TRUE, padding = .05)) +
   scale_fill_brewer(type = "qual", palette = "Set2") +
-  scale_y_continuous(labels = function(x) format(bench::as_bench_time(x))) +
+  scale_y_continuous(labels = scales::number_format(suffix = "s")) +
   theme(legend.position = "bottom") +
   coord_flip() +
   labs(title = "Writing taxi trip data", subtitle = subtitle, x = NULL, y = NULL, fill = NULL)
 
 taxi_writing %>%
-  select(-size, -rows, -cols, -type) %>%
+  select(-size, -rows, -cols, -type, -method, -altrep, -label) %>%
   mutate_if(is.numeric, pretty_sec) %>%
+  spread(package, time) %>%
+  arrange(desc(op)) %>%
+  rename(method = op) %>%
   knitr::kable(digits = 2, align = "r", format = "html")
 
 ## ---- echo = FALSE, warning = FALSE, message = FALSE---------------------

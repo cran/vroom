@@ -37,8 +37,10 @@ vroom(files)
 vroom(files, id = "path")
 
 ## ---- include = FALSE----------------------------------------------------
+# just to clear .Last.value
+1 + 1
 gc()
-fs::file_delete(files)
+unlink(files)
 
 ## ------------------------------------------------------------------------
 file <- vroom_example("mtcars.csv.gz")

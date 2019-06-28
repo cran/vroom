@@ -10,6 +10,7 @@
 #include "vroom_int.h"
 #include "vroom_lgl.h"
 #include "vroom_num.h"
+#include "vroom_rle.h"
 #include "vroom_time.h"
 #include "vroom_vec.h"
 
@@ -39,10 +40,19 @@ inline std::vector<std::string> get_filenames(SEXP in) {
   return out;
 }
 
-inline CharacterVector generate_filename_column(
+inline SEXP generate_filename_column(
     const std::vector<std::string>& filenames,
     const std::vector<size_t>& lengths,
     size_t rows) {
+#ifdef HAS_ALTREP
+  IntegerVector rle(filenames.size());
+  for (size_t i = 0; i < lengths.size(); ++i) {
+    rle[i] = lengths[i];
+  }
+  rle.names() = filenames;
+
+  return vroom_rle::Make(rle);
+#else
   std::vector<std::string> out;
   out.reserve(rows);
 
@@ -56,6 +66,7 @@ inline CharacterVector generate_filename_column(
     }
   }
   return wrap(out);
+#endif
 }
 
 inline List create_columns(
@@ -76,18 +87,19 @@ inline List create_columns(
 
   auto locale_info = std::make_shared<LocaleInfo>(locale);
 
-  std::vector<std::string> res_nms;
-
   size_t i = 0;
 
   bool add_filename = !Rf_isNull(id);
 
   List res(num_cols + add_filename);
 
+  CharacterVector res_nms(num_cols + add_filename);
+
   if (add_filename) {
-    res[i++] =
+    res[i] =
         generate_filename_column(filenames, idx->row_sizes(), idx->num_rows());
-    res_nms.push_back(Rcpp::as<std::string>(id));
+    res_nms[i] = Rcpp::as<Rcpp::CharacterVector>(id)[0];
+    ++i;
   }
 
   auto my_collectors = resolve_collectors(
@@ -124,7 +136,7 @@ inline List create_columns(
                                    locale_info,
                                    std::string()};
 
-    res_nms.push_back(collector.name());
+    res_nms[i] = collector.name();
 
     switch (collector.type()) {
     case column_type::Dbl:
@@ -232,6 +244,9 @@ inline List create_columns(
     // Resize the list appropriately
     SETLENGTH(res, i);
     SET_TRUELENGTH(res, i);
+
+    SETLENGTH(res_nms, i);
+    SET_TRUELENGTH(res_nms, i);
   }
 
   res.attr("names") = res_nms;

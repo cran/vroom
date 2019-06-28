@@ -17,7 +17,7 @@ status](https://www.r-pkg.org/badges/version/vroom)](https://cran.r-project.org/
 maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www.tidyverse.org/lifecycle/#maturing)
 <!-- badges: end -->
 
-The fastest delimited reader for R, **936.19 MB/sec/sec**.
+The fastest delimited reader for R, **1.27 GB/sec**.
 
 But that’s impossible\! How can it be [so
 fast](http://vroom.r-lib.org/articles/benchmarks.html)?
@@ -33,12 +33,12 @@ your R data-manipulation code are needed.
 vroom also uses multiple threads for indexing, materializing
 non-character columns, and when writing to further improve performance.
 
-| package    | version | time (sec) | speedup |    throughput |
-| :--------- | ------: | ---------: | ------: | ------------: |
-| vroom      |   1.0.1 |       1.78 |   46.98 | 936.19 MB/sec |
-| data.table |  1.12.2 |      15.81 |    5.29 | 105.40 MB/sec |
-| readr      |   1.3.1 |      33.86 |    2.47 |  49.23 MB/sec |
-| read.delim |   3.5.3 |      83.64 |    1.00 |  19.93 MB/sec |
+| package    | version | time (sec) | speedup | throughput |
+| :--------- | ------: | ---------: | ------: | ---------: |
+| vroom      |   1.0.2 |       1.33 |   56.02 |    1.27 GB |
+| data.table |  1.12.2 |      15.15 |    4.91 |  110.99 MB |
+| readr      |   1.3.1 |      34.81 |    2.14 |   48.31 MB |
+| read.delim |   3.6.0 |      74.45 |    1.00 |   22.59 MB |
 
 ## Features
 
@@ -119,8 +119,24 @@ by airline.
 library(nycflights13)
 purrr::iwalk(
   split(flights, flights$carrier),
-  ~ vroom::vroom_write(.x, glue::glue("flights_{.y}.tsv"), delim = "\t")
+  ~ { str(.x$carrier[[1]]); vroom::vroom_write(.x, glue::glue("flights_{.y}.tsv"), delim = "\t") }
 )
+#>  chr "9E"
+#>  chr "AA"
+#>  chr "AS"
+#>  chr "B6"
+#>  chr "DL"
+#>  chr "EV"
+#>  chr "F9"
+#>  chr "FL"
+#>  chr "HA"
+#>  chr "MQ"
+#>  chr "OO"
+#>  chr "UA"
+#>  chr "US"
+#>  chr "VX"
+#>  chr "WN"
+#>  chr "YV"
 ```
 
 Then we can efficiently read them into one tibble by passing the

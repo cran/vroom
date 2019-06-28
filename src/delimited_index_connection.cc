@@ -64,11 +64,18 @@ delimited_index_connection::delimited_index_connection(
 
   idx_[0].reserve(128);
 
-  auto sz = R_ReadConnection(con, buf[i].data(), chunk_size - 1);
+  size_t sz = R_ReadConnection(con, buf[i].data(), chunk_size - 1);
   buf[i][sz] = '\0';
 
+  if (sz == 0) {
+    if (should_close) {
+      Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+    }
+    return;
+  }
+
   // Parse header
-  auto start = find_first_line(buf[i], skip_, comment_);
+  size_t start = find_first_line(buf[i], skip_, comment_);
 
   std::string delim_;
   if (delim == nullptr) {
@@ -79,22 +86,28 @@ delimited_index_connection::delimited_index_connection(
 
   delim_len_ = delim_.length();
 
-  auto first_nl = find_next_newline(buf[i], start);
+  size_t first_nl = find_next_newline(buf[i], start);
 
   if (sz > 1 && buf[i][first_nl] != '\n') {
     // This first newline must not have fit in the buffer, throw error
     // suggesting a larger buffer size.
 
-    if (should_close) {
-      Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+    // Try reading again, if size is 0 we are at the end of the file, so should
+    // just go on.
+    size_t next_sz = R_ReadConnection(con, buf[i].data(), chunk_size - 1);
+    if (!(next_sz == 0)) {
+      if (should_close) {
+        Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+      }
+      std::stringstream ss;
+
+      ss << "The size of the connection buffer (" << chunk_size
+         << ") was not large enough\nto fit a complete line:\n  * Increase it "
+            "by "
+            "setting `Sys.setenv(\"VROOM_CONNECTION_SIZE\")`";
+
+      throw Rcpp::exception(ss.str().c_str(), false);
     }
-    std::stringstream ss;
-
-    ss << "The size of the connection buffer (" << chunk_size
-       << ") was not large enough\nto fit a complete line:\n  * Increase it by "
-          "setting `Sys.setenv(\"VROOM_CONNECTION_SIZE\")`";
-
-    throw Rcpp::exception(ss.str().c_str(), false);
   }
 
   // Check for windows newlines
@@ -115,11 +128,13 @@ delimited_index_connection::delimited_index_connection(
   idx_[0].push_back(start - 1);
 
   size_t cols = 0;
+  bool in_quote = false;
   size_t lines_read = index_region(
       buf[i],
       idx_[0],
       delim_.c_str(),
       quote,
+      in_quote,
       start,
       first_nl + 1,
       0,
@@ -136,7 +151,7 @@ delimited_index_connection::delimited_index_connection(
       first_nl,
       sz);
 
-  auto total_read = 0;
+  size_t total_read = 0;
   std::future<void> parse_fut;
   std::future<void> write_fut;
   // We don't actually want any progress bar, so just pass a dummy one.
@@ -153,6 +168,7 @@ delimited_index_connection::delimited_index_connection(
           idx_[1],
           delim_.c_str(),
           quote,
+          in_quote,
           first_nl,
           sz,
           total_read,
@@ -182,7 +198,7 @@ delimited_index_connection::delimited_index_connection(
 
     first_nl = 0;
 
-    SPDLOG_DEBUG("first_nl_loc: {0} size: {1}", first_nl, sz);
+    // SPDLOG_DEBUG("first_nl_loc: {0} size: {1}", first_nl, sz);
   }
   if (parse_fut.valid()) {
     parse_fut.wait();
@@ -207,7 +223,18 @@ delimited_index_connection::delimited_index_connection(
     throw Rcpp::exception(error.message().c_str(), false);
   }
 
-  auto total_size = std::accumulate(
+  size_t file_size = mmap_.size();
+
+  if (mmap_[file_size - 1] != '\n') {
+    if (columns_ == 0) {
+      ++columns_;
+      idx_[0].push_back(file_size);
+    } else {
+      idx_[1].push_back(file_size);
+    }
+  }
+
+  size_t total_size = std::accumulate(
       idx_.begin(), idx_.end(), 0, [](size_t sum, const idx_t& v) {
         sum += v.size() > 0 ? v.size() - 1 : 0;
         return sum;

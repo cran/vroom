@@ -193,6 +193,7 @@ public:
       idx_t& destination,
       const char* delim,
       const char quote,
+      bool& in_quote,
       const size_t start,
       const size_t end,
       const size_t file_offset,
@@ -206,8 +207,6 @@ public:
     std::array<char, 5> query = {delim[0], '\n', '\\', quote, '\0'};
 
     auto last_tick = start;
-
-    bool in_quote = false;
 
     auto buf = source.data();
 
@@ -239,7 +238,7 @@ public:
           }
           // Add additional columns if there are too few
           while (cols < num_cols - 1) {
-            destination.push_back(pos + file_offset);
+            destination.push_back(pos + file_offset - windows_newlines_);
             ++cols;
           }
         }
@@ -254,7 +253,7 @@ public:
         }
         ++lines_read;
         if (progress_ && pb) {
-          auto tick_size = pos - last_tick;
+          size_t tick_size = pos - last_tick;
           if (tick_size > update_size) {
             pb->tick(pos - last_tick);
             last_tick = pos;
@@ -262,12 +261,16 @@ public:
         }
       }
 
-      else if (c == quote) {
-        in_quote = !in_quote;
-      }
-
       else if (escape_backslash_ && c == '\\') {
         ++pos;
+      }
+
+      else if (c == '\0') {
+        break;
+      }
+
+      else if (c == quote) {
+        in_quote = !in_quote;
       }
 
       ++pos;

@@ -19,12 +19,13 @@
 #' # 5. Named arguments with column widths
 #' vroom_fwf(fwf_sample, fwf_cols(name = 20, state = 10, ssn = 12))
 vroom_fwf <- function(file,
-                      col_positions = fwf_empty(file[[1]], skip, n = guess_max),
+                      col_positions = fwf_empty(file, skip, n = guess_max),
                       col_types = NULL,
                       col_select = NULL, id = NULL,
                       locale = default_locale(), na = c("", "NA"),
                       comment = "", trim_ws = TRUE, skip = 0, n_max = Inf,
                       guess_max = 100,
+                      altrep_opts = "chr",
                       num_threads = vroom_threads(),
                       progress = vroom_progress(),
                       .name_repair = "unique") {
@@ -50,7 +51,8 @@ vroom_fwf <- function(file,
     col_types = col_types, col_select = col_select,
     id = id, na = na, guess_max = guess_max, skip = skip, comment = comment,
     n_max = n_max, num_threads = num_threads,
-    altrep_opts = vroom_altrep_opts(), locale = locale, progress = progress)
+    altrep_opts = vroom_altrep_opts(altrep_opts), locale = locale,
+    progress = progress)
 
   out <- tibble::as_tibble(out, .name_repair = .name_repair)
 
@@ -71,7 +73,7 @@ vroom_fwf <- function(file,
 #'      it is set to 100.
 fwf_empty <- function(file, skip = 0, col_names = NULL, comment = "", n = 100L) {
 
-  file <- standardise_path(file)[[1]]
+  file <- standardise_one_path(standardise_path(file)[[1]])
 
   if (inherits(file, "connection")) {
     stop("`file` must be a regular file, not a connection", call. = FALSE)

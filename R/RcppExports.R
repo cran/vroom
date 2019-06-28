@@ -5,8 +5,8 @@ force_materialization <- function(x) {
     invisible(.Call(`_vroom_force_materialization`, x))
 }
 
-vroom_materialize <- function(x) {
-    invisible(.Call(`_vroom_vroom_materialize`, x))
+vroom_materialize <- function(x, replace = FALSE) {
+    .Call(`_vroom_vroom_materialize`, x, replace)
 }
 
 vroom_str_ <- function(x) {
@@ -25,6 +25,14 @@ vroom_ <- function(inputs, delim, quote, trim_ws, escape_double, escape_backslas
     .Call(`_vroom_vroom_`, inputs, delim, quote, trim_ws, escape_double, escape_backslash, comment, skip, n_max, progress, col_names, col_types, col_select, id, na, locale, guess_max, num_threads, altrep_opts)
 }
 
+has_trailing_newline <- function(filename) {
+    .Call(`_vroom_has_trailing_newline`, filename)
+}
+
+vroom_rle <- function(input) {
+    .Call(`_vroom_vroom_rle`, input)
+}
+
 vroom_fwf_ <- function(inputs, col_starts, col_ends, trim_ws, col_names, col_types, col_select, skip, comment, n_max, id, na, locale, guess_max, num_threads, altrep_opts, progress) {
     .Call(`_vroom_vroom_fwf_`, inputs, col_starts, col_ends, trim_ws, col_names, col_types, col_select, skip, comment, n_max, id, na, locale, guess_max, num_threads, altrep_opts, progress)
 }
@@ -37,8 +45,8 @@ vroom_write_ <- function(input, filename, delim, na_str, col_names, append, opti
     invisible(.Call(`_vroom_vroom_write_`, input, filename, delim, na_str, col_names, append, options, num_threads, progress, buf_lines))
 }
 
-vroom_write_connection_ <- function(input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines) {
-    invisible(.Call(`_vroom_vroom_write_connection_`, input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines))
+vroom_write_connection_ <- function(input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines, is_stdout) {
+    invisible(.Call(`_vroom_vroom_write_connection_`, input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines, is_stdout))
 }
 
 vroom_format_ <- function(input, delim, na_str, col_names, options) {

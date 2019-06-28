@@ -95,8 +95,10 @@ vroom(files, id = "path")
 ```
 
 ```{r, include = FALSE}
+# just to clear .Last.value
+1 + 1
 gc()
-fs::file_delete(files)
+unlink(files)
 ```
 
 ## Reading compressed files
@@ -201,10 +203,10 @@ The available specifications are: (with single letter abbreviations in quotes)
 * `col_logical()` 'l', containing only `T`, `F`, `TRUE`, `FALSE`, `1` or `0`.
 * `col_integer()` 'i', integer values.
 * `col_double()` 'd', floating point values.
-* `col_number()` [n], numbers containing the `grouping_mark`
-* `col_date(format = "")` [D]: with the locale's `date_format`.
-* `col_time(format = "")` [t]: with the locale's `time_format`.
-* `col_datetime(format = "")` [T]: ISO8601 date times.
+* `col_number()` 'n', numbers containing the `grouping_mark`
+* `col_date(format = "")` 'D': with the locale's `date_format`.
+* `col_time(format = "")` 't': with the locale's `time_format`.
+* `col_datetime(format = "")` 'T': ISO8601 date times.
 * `col_factor(levels, ordered)` 'f', a fixed set of values.
 * `col_character()` 'c', everything else.
 * `col_skip()` '_, -', don't import this column.
@@ -286,9 +288,9 @@ unlink(c("mtcars.tsv.gz", "mtcars.tsv.bz2", "mtcars.tsv.xz"))
 ```
 
 It is also possible to use other compressors, such as
-[pigz](https://zlib.net/pigz/) a parallel gzip implementation,
-[lbzip2](http://lbzip2.org/) a parallel bzip2 implementation or
-[pixz](https://github.com/vasi/pixz) a parallel xz implementation by using
+[pigz](https://zlib.net/pigz/), a parallel gzip implementation,
+lbzip2, a parallel bzip2 implementation or
+[pixz](https://github.com/vasi/pixz), a parallel xz implementation by using
 `pipe()` to create a pipe connection. The parallel versions can be considerably
 faster for large output files.
 

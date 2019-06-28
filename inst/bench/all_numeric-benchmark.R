@@ -1,5 +1,6 @@
-rows <- 1e6
-cols <- 25
+args <- commandArgs(trailingOnly = TRUE)
+rows <- as.integer(args[[1]])
+cols <- as.integer(args[[2]])
 
 set.seed(42)
 RNGversion("3.5.3")
@@ -12,36 +13,6 @@ data <- vroom::gen_tbl(rows, cols, col_types = strrep("d", cols))
 vroom::vroom_write(data, file, "\t")
 
 desc <- c("setup", "read", "print", "head", "tail", "sample", "filter", "aggregate")
-
-`vroom (full altrep)_base` <- function(file, desc) {
-  bench::workout(description = desc,
-    {
-    {library(vroom); Sys.setenv("VROOM_USE_ALTREP_NUMERICS" = "true") }
-      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character())
-      print(x)
-      a <- head(x)
-      b <- tail(x)
-      c <- x[sample(NROW(x), 100), ]
-      d <- x[x$X1 > 3, ]
-      e <- tapply(x$X1, as.integer(x$X2), mean)
-    }
-  )
-}
-
-`vroom (full altrep)_dplyr` <- function(file, desc) {
-  bench::workout(description = desc,
-    {
-      {library(vroom); library(dplyr); Sys.setenv("VROOM_USE_ALTREP_NUMERICS" = "true") }
-      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character())
-      print(x)
-      a <- head(x)
-      b <- tail(x)
-      c <- sample_n(x, 100)
-      d <- filter(x, X1 > 3)
-      e <- group_by(x, as.integer(X2)) %>% summarise(avg_X1 = mean(X1))
-    }
-  )
-}
 
 vroom_base <- function(file, desc) {
   bench::workout(description = desc,
@@ -58,11 +29,71 @@ vroom_base <- function(file, desc) {
   )
 }
 
+`vroom (full altrep)_base` <- function(file, desc) {
+  bench::workout(description = desc,
+    {
+    ({library(vroom)})
+      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character(), altrep_opts = TRUE)
+      print(x)
+      a <- head(x)
+      b <- tail(x)
+      c <- x[sample(NROW(x), 100), ]
+      d <- x[x$X1 > 3, ]
+      e <- tapply(x$X1, as.integer(x$X2), mean)
+    }
+  )
+}
+
+`vroom (no altrep)_base` <- function(file, desc) {
+  bench::workout(description = desc,
+    {
+    ({library(vroom)})
+      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character(), altrep_opts = FALSE)
+      print(x)
+      a <- head(x)
+      b <- tail(x)
+      c <- x[sample(NROW(x), 100), ]
+      d <- x[x$X1 > 3, ]
+      e <- tapply(x$X1, as.integer(x$X2), mean)
+    }
+  )
+}
+
 vroom_dplyr <- function(file, desc) {
   bench::workout(description = desc,
     {
-      { library(vroom); library(dplyr) }
+      ({ library(vroom); library(dplyr) })
       x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character())
+      print(x)
+      a <- head(x)
+      b <- tail(x)
+      c <- sample_n(x, 100)
+      d <- filter(x, X1 > 3)
+      e <- group_by(x, as.integer(X2)) %>% summarise(avg_X1 = mean(X1))
+    }
+  )
+}
+
+`vroom (full altrep)_dplyr` <- function(file, desc) {
+  bench::workout(description = desc,
+    {
+      ({library(vroom); library(dplyr)})
+      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character(), altrep_opts = TRUE)
+      print(x)
+      a <- head(x)
+      b <- tail(x)
+      c <- sample_n(x, 100)
+      d <- filter(x, X1 > 3)
+      e <- group_by(x, as.integer(X2)) %>% summarise(avg_X1 = mean(X1))
+    }
+  )
+}
+
+`vroom (no altrep)_dplyr` <- function(file, desc) {
+  bench::workout(description = desc,
+    {
+      ({library(vroom); library(dplyr)})
+      x <- vroom(file, trim_ws = FALSE, quote = "", escape_double = FALSE, na = character(), altrep_opts = FALSE)
       print(x)
       a <- head(x)
       b <- tail(x)
@@ -91,7 +122,7 @@ data.table <- function(file, desc) {
 readr <- function(file, desc) {
   bench::workout(description = desc,
     {
-    { library(readr); library(dplyr) }
+    ({ library(readr); library(dplyr) })
       x <- read_tsv(file, trim_ws = FALSE, quote = "", na = character())
       print(x)
       a <- head(x)
@@ -106,7 +137,7 @@ readr <- function(file, desc) {
 read.delim <- function(file, desc) {
   bench::workout(description = desc,
     {
-      {}
+      ({})
       x <- read.delim(file, quote = "", na.strings = NULL, stringsAsFactors = FALSE)
       print(head(x, 10))
       a <- head(x)
@@ -119,10 +150,12 @@ read.delim <- function(file, desc) {
 }
 
 times <- list(
-  `vroom (full altrep)_base` = callr::r(`vroom (full altrep)_base`, list(file, desc)),
-  `vroom (full altrep)_dplyr` = callr::r(`vroom (full altrep)_dplyr`, list(file, desc)),
   vroom_base = callr::r(vroom_base, list(file, desc)),
+  `vroom (full altrep)_base` = callr::r(`vroom (full altrep)_base`, list(file, desc)),
+  `vroom (no altrep)_base` = callr::r(`vroom (no altrep)_base`, list(file, desc)),
   vroom_dplyr = callr::r(vroom_dplyr, list(file, desc)),
+  `vroom (full altrep)_dplyr` = callr::r(`vroom (full altrep)_dplyr`, list(file, desc)),
+  `vroom (no altrep)_dplyr` = callr::r(`vroom (no altrep)_dplyr`, list(file, desc)),
   data.table = callr::r(data.table, list(file, desc)),
   readr = callr::r(readr, list(file, desc)),
   read.delim = callr::r(read.delim, list(file, desc))

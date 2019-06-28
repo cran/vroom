@@ -16,13 +16,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // vroom_materialize
-void vroom_materialize(Rcpp::List x);
-RcppExport SEXP _vroom_vroom_materialize(SEXP xSEXP) {
+SEXP vroom_materialize(SEXP x, bool replace);
+RcppExport SEXP _vroom_vroom_materialize(SEXP xSEXP, SEXP replaceSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::List >::type x(xSEXP);
-    vroom_materialize(x);
-    return R_NilValue;
+    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< bool >::type replace(replaceSEXP);
+    rcpp_result_gen = Rcpp::wrap(vroom_materialize(x, replace));
+    return rcpp_result_gen;
 END_RCPP
 }
 // vroom_str_
@@ -94,6 +96,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// has_trailing_newline
+bool has_trailing_newline(std::string filename);
+RcppExport SEXP _vroom_has_trailing_newline(SEXP filenameSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type filename(filenameSEXP);
+    rcpp_result_gen = Rcpp::wrap(has_trailing_newline(filename));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vroom_rle
+SEXP vroom_rle(Rcpp::IntegerVector input);
+RcppExport SEXP _vroom_vroom_rle(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(vroom_rle(input));
+    return rcpp_result_gen;
+END_RCPP
+}
 // vroom_fwf_
 List vroom_fwf_(List inputs, std::vector<int> col_starts, std::vector<int> col_ends, bool trim_ws, RObject col_names, RObject col_types, RObject col_select, size_t skip, const char comment, ptrdiff_t n_max, SEXP id, CharacterVector na, List locale, ptrdiff_t guess_max, size_t num_threads, size_t altrep_opts, bool progress);
 RcppExport SEXP _vroom_vroom_fwf_(SEXP inputsSEXP, SEXP col_startsSEXP, SEXP col_endsSEXP, SEXP trim_wsSEXP, SEXP col_namesSEXP, SEXP col_typesSEXP, SEXP col_selectSEXP, SEXP skipSEXP, SEXP commentSEXP, SEXP n_maxSEXP, SEXP idSEXP, SEXP naSEXP, SEXP localeSEXP, SEXP guess_maxSEXP, SEXP num_threadsSEXP, SEXP altrep_optsSEXP, SEXP progressSEXP) {
@@ -155,8 +179,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // vroom_write_connection_
-void vroom_write_connection_(Rcpp::List input, Rcpp::RObject con, const char delim, const char* na_str, bool col_names, size_t options, size_t num_threads, bool progress, size_t buf_lines);
-RcppExport SEXP _vroom_vroom_write_connection_(SEXP inputSEXP, SEXP conSEXP, SEXP delimSEXP, SEXP na_strSEXP, SEXP col_namesSEXP, SEXP optionsSEXP, SEXP num_threadsSEXP, SEXP progressSEXP, SEXP buf_linesSEXP) {
+void vroom_write_connection_(Rcpp::List input, Rcpp::RObject con, const char delim, const char* na_str, bool col_names, size_t options, size_t num_threads, bool progress, size_t buf_lines, bool is_stdout);
+RcppExport SEXP _vroom_vroom_write_connection_(SEXP inputSEXP, SEXP conSEXP, SEXP delimSEXP, SEXP na_strSEXP, SEXP col_namesSEXP, SEXP optionsSEXP, SEXP num_threadsSEXP, SEXP progressSEXP, SEXP buf_linesSEXP, SEXP is_stdoutSEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::List >::type input(inputSEXP);
@@ -168,7 +192,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< size_t >::type num_threads(num_threadsSEXP);
     Rcpp::traits::input_parameter< bool >::type progress(progressSEXP);
     Rcpp::traits::input_parameter< size_t >::type buf_lines(buf_linesSEXP);
-    vroom_write_connection_(input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines);
+    Rcpp::traits::input_parameter< bool >::type is_stdout(is_stdoutSEXP);
+    vroom_write_connection_(input, con, delim, na_str, col_names, options, num_threads, progress, buf_lines, is_stdout);
     return R_NilValue;
 END_RCPP
 }
@@ -190,15 +215,17 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_vroom_force_materialization", (DL_FUNC) &_vroom_force_materialization, 1},
-    {"_vroom_vroom_materialize", (DL_FUNC) &_vroom_vroom_materialize, 1},
+    {"_vroom_vroom_materialize", (DL_FUNC) &_vroom_vroom_materialize, 2},
     {"_vroom_vroom_str_", (DL_FUNC) &_vroom_vroom_str_, 1},
     {"_vroom_gen_character_", (DL_FUNC) &_vroom_gen_character_, 6},
     {"_vroom_guess_type_", (DL_FUNC) &_vroom_guess_type_, 3},
     {"_vroom_vroom_", (DL_FUNC) &_vroom_vroom_, 19},
+    {"_vroom_has_trailing_newline", (DL_FUNC) &_vroom_has_trailing_newline, 1},
+    {"_vroom_vroom_rle", (DL_FUNC) &_vroom_vroom_rle, 1},
     {"_vroom_vroom_fwf_", (DL_FUNC) &_vroom_vroom_fwf_, 17},
     {"_vroom_whitespace_columns_", (DL_FUNC) &_vroom_whitespace_columns_, 4},
     {"_vroom_vroom_write_", (DL_FUNC) &_vroom_vroom_write_, 10},
-    {"_vroom_vroom_write_connection_", (DL_FUNC) &_vroom_vroom_write_connection_, 9},
+    {"_vroom_vroom_write_connection_", (DL_FUNC) &_vroom_vroom_write_connection_, 10},
     {"_vroom_vroom_format_", (DL_FUNC) &_vroom_vroom_format_, 5},
     {NULL, NULL, 0}
 };
@@ -210,6 +237,7 @@ void init_vroom_dttm(DllInfo* dll);
 void init_vroom_fct(DllInfo* dll);
 void init_vroom_int(DllInfo* dll);
 void init_vroom_num(DllInfo* dll);
+void init_vroom_rle(DllInfo* dll);
 void init_vroom_time(DllInfo* dll);
 RcppExport void R_init_vroom(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
@@ -221,5 +249,6 @@ RcppExport void R_init_vroom(DllInfo *dll) {
     init_vroom_fct(dll);
     init_vroom_int(dll);
     init_vroom_num(dll);
+    init_vroom_rle(dll);
     init_vroom_time(dll);
 }

@@ -15,18 +15,19 @@
 #'   excel to read the data with the correct encoding (UTF-8)
 #' @export
 #' @examples
-#' \dontshow{.old_wd <- setwd(tempdir())}
 #' # If you only specify a file name, vroom_write() will write
 #' # the file to your current working directory.
-#' vroom_write(mtcars, "mtcars.tsv")
-#' vroom_write(mtcars, "mtcars.csv", ",")
+#' out_file <- tempfile(fileext = "csv")
+#' vroom_write(mtcars, out_file, ",")
+#'
+#' # You can also use a literal filename
+#' # vroom_write(mtcars, "mtcars.tsv")
 #'
 #' # If you add an extension to the file name, write_()* will
 #' # automatically compress the output.
-#' vroom_write(mtcars, "mtcars.tsv.gz")
-#' vroom_write(mtcars, "mtcars.tsv.bz2")
-#' vroom_write(mtcars, "mtcars.tsv.xz")
-#' \dontshow{setwd(.old_wd)}
+#' # vroom_write(mtcars, "mtcars.tsv.gz")
+#' # vroom_write(mtcars, "mtcars.tsv.bz2")
+#' # vroom_write(mtcars, "mtcars.tsv.xz")
 vroom_write <- function(x, path, delim = '\t', na = "NA", col_names = !append,
   append = FALSE, quote = c("needed", "all", "none"), escape =
     c("double", "backslash", "none"), bom = FALSE, num_threads =
@@ -40,22 +41,26 @@ vroom_write <- function(x, path, delim = '\t', na = "NA", col_names = !append,
   # Standardise path returns a list, but we will only ever have 1 output file.
   path <- standardise_one_path(path, check = FALSE)
 
-  x_in <- x
-  x[] <- lapply(x, output_column)
+  # We need to materialize any altrep vector as otherwise we can't fill the
+  # write buffers from other threads.
+  xx <- vroom_materialize(x, replace = TRUE)
+
+  xx[] <- lapply(xx, output_column)
 
   # This seems to work ok in practice
   buf_lines <- max(as.integer(Sys.getenv("VROOM_WRITE_BUFFER_SIZE", nrow(x) / 100 / num_threads)), 1)
 
   if (inherits(path, "connection")) {
-    vroom_write_connection_(x, path, delim, na_str = na, col_names = col_names,
-      options = opts, num_threads = num_threads, progress = progress, buf_lines = buf_lines)
+    vroom_write_connection_(xx, path, delim, na_str = na, col_names = col_names,
+      options = opts, num_threads = num_threads, progress = progress, buf_lines = buf_lines,
+      is_stdout = path == stdout())
   } else {
-    vroom_write_(x, path, delim, na_str = na, col_names = col_names,
+    vroom_write_(xx, path, delim, na_str = na, col_names = col_names,
       append = append, options = opts,
       num_threads = num_threads, progress = progress, buf_lines = buf_lines)
   }
 
-  invisible(x_in)
+  invisible(x)
 }
 
 

@@ -363,3 +363,28 @@ test_that("guess_type works with long strings (#74)", {
 test_that("vroom errors if unnamed column types do not match the number of columns", {
   expect_error(vroom("a,b\n1,2\n", col_types = "i"), "must have the same length", class = "Rcpp::eval_error")
 })
+
+test_that("column names are properly encoded", {
+  nms <- vroom::vroom("f\U00F6\U00F6\nbar\n")
+  expect_equal(Encoding(colnames(nms)), "UTF-8")
+})
+
+test_that("Files with windows newlines and missing fields work", {
+  test_vroom("a,b,c,d\r\nm,\r\n\r\n", delim = ",",
+    equals = tibble::tibble(a = c("m", NA), b = c(NA, NA), c = c(NA, NA), d = c(NA, NA))
+  )
+})
+
+test_that("vroom can read files with no trailing newline", {
+  f <- tempfile()
+  on.exit(unlink(f))
+
+  writeBin(charToRaw("foo\nbar"), f)
+  expect_equal(vroom(f, col_names = FALSE)[[1]], c("foo", "bar"))
+
+  f2 <- tempfile()
+  on.exit(unlink(f2), add = TRUE)
+
+  writeBin(charToRaw("foo,bar\n1,2"), f2)
+  expect_equal(vroom(f2), tibble::tibble(foo = 1, bar = 2))
+})

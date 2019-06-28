@@ -5,6 +5,7 @@
 #include "connection.h"
 #include "index.h"
 #include "index_collection.h"
+#include "vroom_rle.h"
 #include <Rcpp.h>
 #include <algorithm>
 
@@ -73,4 +74,35 @@ SEXP vroom_(
       altrep_opts,
       guess_max,
       num_threads);
+}
+
+// [[Rcpp::export]]
+bool has_trailing_newline(std::string filename) {
+  std::FILE* f = std::fopen(filename.c_str(), "rb");
+
+  if (!f) {
+    return true;
+  }
+
+  fseek(f, -1, SEEK_END);
+  char c = fgetc(f);
+  return c == '\n';
+}
+
+// [[Rcpp::export]]
+SEXP vroom_rle(Rcpp::IntegerVector input) {
+#ifdef HAS_ALTREP
+  return vroom_rle::Make(input);
+#else
+  R_xlen_t total_size = std::accumulate(input.begin(), input.end(), 0);
+  CharacterVector out(total_size);
+  CharacterVector nms = input.names();
+  R_xlen_t idx = 0;
+  for (R_xlen_t i = 0; i < Rf_xlength(input); ++i) {
+    for (R_xlen_t j = 0; j < input[i]; ++j) {
+      SET_STRING_ELT(out, idx++, nms[i]);
+    }
+  }
+  return out;
+#endif
 }
