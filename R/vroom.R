@@ -7,8 +7,8 @@ NULL
 #'
 #' @inheritParams readr::read_delim
 #' @param file path to a local file.
-#' @param delim One of more characters used to delimiter fields within a
-#'   record. If `NULL` the delimiter is guessed from the set of `c(",", "\t", " ",
+#' @param delim One or more characters used to delimit fields within a
+#'   file. If `NULL` the delimiter is guessed from the set of `c(",", "\t", " ",
 #'   "|", ":", ";")`.
 #' @param num_threads Number of threads to use when reading and materializing
 #'   vectors. If your data contains embedded newlines (newlines within fields)
@@ -134,6 +134,8 @@ vroom <- function(
   has_spec <- !is.null(col_types)
 
   col_types <- as.col_spec(col_types)
+
+  na <- enc2utf8(na)
 
   out <- vroom_(file, delim = delim %||% col_types$delim, col_names = col_names,
     col_types = col_types, id = id, skip = skip, col_select = col_select,

@@ -1,17 +1,26 @@
 context("test-vroom_write.R")
 
-test_that("empty inputs just return themselves without writing anything", {
+test_that("empty columns just return themselves without writing anything", {
   out <- tempfile()
 
-  no_rows <- mtcars[FALSE, ]
   no_cols <- mtcars[, FALSE]
   no_rows_or_cols <- mtcars[FALSE, FALSE]
 
-  expect_equal(vroom_write(no_rows, out), no_rows)
   expect_equal(vroom_write(no_cols, out), no_cols)
   expect_equal(vroom_write(no_rows_or_cols, out), no_rows_or_cols)
 
   expect_false(file.exists(out))
+})
+
+test_that("empty rows print the headers", {
+  out <- tempfile()
+  on.exit(unlink(out))
+
+  no_rows <- mtcars[FALSE, ]
+
+  expect_equal(vroom_write(no_rows, out), no_rows)
+
+  expect_equal(strsplit(readLines(out), "\t")[[1]], colnames(mtcars))
 })
 
 test_that("strings are only quoted if needed", {
@@ -187,4 +196,15 @@ test_that("vroom_write equals the same thing as vroom_format", {
   )
 
   expect_equal(readChar(tf, file.info(tf)$size), vroom_format(df))
+})
+
+test_that("vroom_write(append = TRUE) works with R connections", {
+  df <- data.frame(x = 1, y = 2)
+  f <- tempfile(, fileext = ".tsv.gz")
+  on.exit(unlink(f))
+
+  vroom::vroom_write(df, f)
+  vroom::vroom_write(df, f, append = TRUE)
+
+  expect_equal(vroom_lines(f), c("x\ty", "1\t2", "1\t2"))
 })

@@ -105,7 +105,6 @@ test_that("%p detects AM/PM", {
 })
 
 test_that("%b and %B are case insensitive", {
-  skip("not working")
   ref <- as.Date("2001-01-01")
 
   test_parse_date("2001 JAN 01", "%Y %b %d", expected = ref)
@@ -170,6 +169,7 @@ test_that("locale affects day of week", {
 
 test_that("locale affects am/pm", {
   skip_on_os("windows")
+  skip_if_not(l10n_info()$`UTF-8`)
 
   expected <- hms::hms(hours = 13, minutes = 30)
   test_parse_time("01:30 PM", "%H:%M %p", expected = expected)

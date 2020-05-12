@@ -46,6 +46,7 @@ test_that("vroom adds the id column from the filename for multiple connections",
 })
 
 test_that("vroom works with many files", {
+  skip_on_os("solaris")
 
   dir <- tempfile()
   dir.create(dir)
@@ -70,6 +71,7 @@ test_that("vroom works with many files", {
 })
 
 test_that("vroom works with many connections", {
+  skip_on_os("solaris")
 
   dir <- tempfile()
   dir.create(dir)
