@@ -1,9 +1,13 @@
 #pragma once
 
-#include "DateTimeParser.h"
-#include "parallel.h"
+#include <cpp11/doubles.hpp>
+#include <cpp11/integers.hpp>
+
 #include "vroom.h"
 #include "vroom_vec.h"
+
+#include "DateTimeParser.h"
+#include "parallel.h"
 
 #ifdef VROOM_LOG
 #include "spdlog/spdlog.h"
@@ -14,7 +18,7 @@ using namespace vroom;
 double parse_dttm(
     const string& str, DateTimeParser& parser, const std::string& format);
 
-Rcpp::NumericVector read_dttm(vroom_vec_info* info);
+cpp11::doubles read_dttm(vroom_vec_info* info);
 
 #ifdef HAS_ALTREP
 
@@ -40,9 +44,9 @@ public:
     SEXP out = PROTECT(R_MakeExternalPtr(dttm_info, R_NilValue, R_NilValue));
     R_RegisterCFinalizerEx(out, vroom_dttm::Finalize, FALSE);
 
-    Rcpp::RObject res = R_new_altrep(class_t, out, R_NilValue);
+    cpp11::sexp res = R_new_altrep(class_t, out, R_NilValue);
 
-    res.attr("class") = Rcpp::CharacterVector::create("POSIXct", "POSIXt");
+    res.attr("class") = {"POSIXct", "POSIXt"};
     res.attr("tzone") = info->locale->tz_;
 
     UNPROTECT(1);
@@ -57,10 +61,10 @@ public:
   // What gets printed when .Internal(inspect()) is used
   static Rboolean Inspect(
       SEXP x,
-      int pre,
-      int deep,
-      int pvec,
-      void (*inspect_subtree)(SEXP, int, int, int)) {
+      int,
+      int,
+      int,
+      void (*)(SEXP, int, int, int)) {
     Rprintf(
         "vroom_dttm (len=%d, materialized=%s)\n",
         Length(x),
@@ -133,7 +137,7 @@ public:
   }
 
   template <typename T>
-  static SEXP Extract_subset(SEXP x, SEXP indx, SEXP call) {
+  static SEXP Extract_subset(SEXP x, SEXP indx, SEXP) {
     SEXP data2 = R_altrep_data2(x);
     // If the vector is already materialized, just fall back to the default
     // implementation
@@ -141,13 +145,19 @@ public:
       return nullptr;
     }
 
-    Rcpp::IntegerVector in(indx);
+    cpp11::integers in(indx);
 
     auto idx = std::make_shared<std::vector<size_t> >();
 
-    std::transform(in.begin(), in.end(), std::back_inserter(*idx), [](int i) {
-      return i - 1;
-    });
+    idx->reserve(in.size());
+
+    for (const auto& i : in) {
+      // If there are any NA indices fall back to the default implementation.
+      if (i == NA_INTEGER) {
+        return nullptr;
+      }
+      idx->push_back(i - 1);
+    }
 
     auto inf = Info(x);
 
@@ -185,7 +195,7 @@ public:
     return Make(info);
   }
 
-  static void* Dataptr(SEXP vec, Rboolean writeable) {
+  static void* Dataptr(SEXP vec, Rboolean) {
     return STDVEC_DATAPTR(Materialize(vec));
   }
 
@@ -210,6 +220,5 @@ public:
 
 #endif
 
-// Called the package is loaded (needs Rcpp 0.12.18.3)
-// [[Rcpp::init]]
-void init_vroom_dttm(DllInfo* dll);
+// Called the package is loaded
+[[cpp11::init]] void init_vroom_dttm(DllInfo* dll);

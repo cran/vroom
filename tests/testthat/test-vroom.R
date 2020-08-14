@@ -361,7 +361,7 @@ test_that("guess_type works with long strings (#74)", {
 })
 
 test_that("vroom errors if unnamed column types do not match the number of columns", {
-  expect_error(vroom("a,b\n1,2\n", col_types = "i"), "must have the same length", class = "Rcpp::eval_error")
+  expect_error(vroom("a,b\n1,2\n", col_types = "i"), "must have the same length")
 })
 
 test_that("column names are properly encoded", {
@@ -391,8 +391,8 @@ test_that("vroom can read files with no trailing newline", {
 
 test_that("Missing files error with a nice error message", {
   f <- tempfile()
-  expect_error(vroom(f), "does not exist", class = "Rcpp::exception")
-  expect_error(vroom("foo"), "does not exist in current working directory", class = "Rcpp::exception")
+  expect_error(vroom(f), "does not exist")
+  expect_error(vroom("foo"), "does not exist in current working directory")
 })
 
 test_that("Can return the spec object", {
@@ -442,6 +442,15 @@ test_that("vroom supports NA and NA_integer_ indices", {
   expect_equal(data[NA_integer_, 1, drop = TRUE], NA_character_)
 })
 
+test_that("vroom supports NA and NA_integer_ indices with factors and datetimes", {
+  data <- vroom("x\ty\nfoo\t2020-01-01 12:00:01", col_types = "fT")
+
+  expect_equal(data[NA, 1, drop = TRUE], factor(NA, levels = "foo"))
+  expect_equal(data[NA, 2, drop = TRUE], .POSIXct(NA_real_, tz = "UTC"))
+  expect_equal(data[NA_integer_, 1, drop = TRUE], factor(NA, levels = "foo"))
+  expect_equal(data[NA_integer_, 2, drop = TRUE], .POSIXct(NA_real_, tz = "UTC"))
+})
+
 test_that("vroom works with windows newlines and files without a trailing newline (#219)", {
   f <- tempfile()
   on.exit(unlink(f))
@@ -449,4 +458,25 @@ test_that("vroom works with windows newlines and files without a trailing newlin
 
   res <- vroom(f, col_types = cols(Y = "c"))
   expect_equal(res$Y[[2]], "05/01/2018")
+})
+
+test_that("vroom works with `id` and skipped columns", {
+  data <- vroom(vroom_example("mtcars.csv"), col_types = c(mpg = "_"), id = "File")
+
+  expect_true(ncol(data) == 12)
+  expect_true(names(data)[[1]] == "File")
+  expect_false("mpg" %in% names(data))
+})
+
+test_that("vroom works with n_max, windows newlines and files larger than the connection buffer", {
+  f <- tempfile()
+  on.exit(unlink(f))
+  writeBin(charToRaw("X,Y\r\n1,2\r\n3342343242312312,442342432423432432\r\n432424324,532432324"), f)
+
+  withr::with_envvar(c("VROOM_CONNECTION_SIZE" = 25),
+    res <- vroom(f, delim = ",", n_max = 1)
+  )
+
+  expect_equal(res$X, 1)
+  expect_equal(res$Y, 2)
 })

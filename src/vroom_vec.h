@@ -1,19 +1,18 @@
 #pragma once
 
-#include "altrep.h"
-
-#include "index_collection.h"
+#include <cpp11/integers.hpp>
+#include <cpp11/strings.hpp>
 
 #include "LocaleInfo.h"
-
-#include <Rcpp.h>
+#include "altrep.h"
+#include "index_collection.h"
 
 using namespace vroom;
 
 struct vroom_vec_info {
   std::shared_ptr<vroom::index::column> column;
   size_t num_threads;
-  std::shared_ptr<Rcpp::CharacterVector> na;
+  std::shared_ptr<cpp11::strings> na;
   std::shared_ptr<LocaleInfo> locale;
   std::string format;
 };
@@ -66,12 +65,16 @@ public:
     return STDVEC_DATAPTR(data2);
   }
 
-  template <typename T>
-  static SEXP Extract_subset(SEXP x, SEXP indx, SEXP call) {
+  template <typename T> static SEXP Extract_subset(SEXP x, SEXP indx, SEXP) {
     SEXP data2 = R_altrep_data2(x);
     // If the vector is already materialized, just fall back to the default
     // implementation
     if (data2 != R_NilValue) {
+      return nullptr;
+    }
+
+    // If there are no indices to subset fall back to default implementation.
+    if (Rf_xlength(indx) == 0) {
       return nullptr;
     }
 
@@ -81,9 +84,9 @@ public:
     {
       auto& inf = Info(x);
 
-      Rcpp::IntegerVector in(indx);
+      cpp11::writable::integers in(indx);
 
-      auto idx = std::make_shared<std::vector<size_t> >();
+      auto idx = std::make_shared<std::vector<size_t>>();
       idx->reserve(in.size());
 
       for (const auto& i : in) {
@@ -94,11 +97,12 @@ public:
         idx->push_back(i - 1);
       }
 
-      info = new vroom_vec_info{inf.column->subset(idx),
-                                inf.num_threads,
-                                inf.na,
-                                inf.locale,
-                                inf.format};
+      info = new vroom_vec_info{
+          inf.column->subset(idx),
+          inf.num_threads,
+          inf.na,
+          inf.locale,
+          inf.format};
     }
 
     return T::Make(info);

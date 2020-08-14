@@ -1,5 +1,4 @@
 #' @useDynLib vroom, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
 #' @importFrom bit64 integer64
 NULL
 
@@ -139,10 +138,15 @@ vroom <- function(
 
   out <- vroom_(file, delim = delim %||% col_types$delim, col_names = col_names,
     col_types = col_types, id = id, skip = skip, col_select = col_select,
+    name_repair = .name_repair,
     na = na, quote = quote, trim_ws = trim_ws, escape_double = escape_double,
     escape_backslash = escape_backslash, comment = comment, locale = locale,
     guess_max = guess_max, n_max = n_max, altrep = vroom_altrep(altrep),
     num_threads = num_threads, progress = progress)
+
+  # Drop any NULL columns
+  is_null <- vapply(out, is.null, logical(1))
+  out[is_null] <- NULL
 
   out <- tibble::as_tibble(out, .name_repair = .name_repair)
 
@@ -284,7 +288,7 @@ vroom_tempfile <- function() {
 #'
 #' Alternatively there is also a family of environment variables to control use of
 #' the Altrep framework. These can then be set in your `.Renviron` file, e.g.
-#' with [usethis::edit_r_environ()]. For versions of R where the Altrep
+#' with `usethis::edit_r_environ()`. For versions of R where the Altrep
 #' framework is unavailable (R < 3.5.0) they are automatically turned off and
 #' the variables have no effect. The variables can take one of `true`, `false`,
 #' `TRUE`, `FALSE`, `1`, or `0`.

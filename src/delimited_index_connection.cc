@@ -1,12 +1,14 @@
+#include <cpp11/function.hpp>
+
 #include "delimited_index_connection.h"
 
 #include "connection.h"
 
 #include <fstream>
 #include <future> // std::async, std::future
+#include <numeric>
 
 #include "r_utils.h"
-#include <Rcpp.h>
 
 #ifdef VROOM_LOG
 #include "spdlog/sinks/basic_file_sink.h" // support for basic file logging
@@ -40,8 +42,8 @@ delimited_index_connection::delimited_index_connection(
   skip_ = skip;
   progress_ = progress;
 
-  filename_ = Rcpp::as<std::string>(Rcpp::as<Rcpp::Function>(
-      Rcpp::Environment::namespace_env("vroom")["vroom_tempfile"])());
+  filename_ =
+      cpp11::as_cpp<std::string>(cpp11::package("vroom")["vroom_tempfile"]());
 
   std::FILE* out = unicode_fopen(filename_.c_str(), "wb");
 
@@ -49,7 +51,7 @@ delimited_index_connection::delimited_index_connection(
 
   bool should_open = !is_open(in);
   if (should_open) {
-    Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["open"])(in, "rb");
+    cpp11::package("base")["open"](in, "rb");
   }
 
   /* raw connections are always created as open, but we should close them */
@@ -71,7 +73,7 @@ delimited_index_connection::delimited_index_connection(
 
   if (sz == 0) {
     if (should_close) {
-      Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+      cpp11::package("base")["close"](in);
     }
     return;
   }
@@ -100,7 +102,7 @@ delimited_index_connection::delimited_index_connection(
     size_t next_sz = R_ReadConnection(con, buf[i].data(), chunk_size - 1);
     if (!(next_sz == 0)) {
       if (should_close) {
-        Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+        cpp11::package("base")["close"](in);
       }
       std::stringstream ss;
 
@@ -109,7 +111,7 @@ delimited_index_connection::delimited_index_connection(
             "by "
             "setting `Sys.setenv(\"VROOM_CONNECTION_SIZE\")`";
 
-      throw Rcpp::exception(ss.str().c_str(), false);
+      cpp11::stop("%s", ss.str().c_str());
     }
   }
 
@@ -123,7 +125,9 @@ delimited_index_connection::delimited_index_connection(
     pb->tick(start);
   }
 
-  n_max = n_max != static_cast<size_t>(-1) ? n_max + has_header_ : n_max;
+  bool n_max_set = n_max != static_cast<size_t>(-1);
+
+  n_max = n_max_set ? n_max + has_header_ : n_max;
 
   std::unique_ptr<multi_progress> empty_pb = nullptr;
 
@@ -163,23 +167,24 @@ delimited_index_connection::delimited_index_connection(
     if (parse_fut.valid()) {
       parse_fut.wait();
     }
-    parse_fut = std::async([&, i, sz, first_nl, total_read] {
-      n_max -= lines_read;
-
-      lines_read = index_region(
-          buf[i],
-          idx_[1],
-          delim_.c_str(),
-          quote,
-          in_quote,
-          first_nl,
-          sz,
-          total_read,
-          n_max,
-          cols,
-          columns_,
-          empty_pb);
-    });
+    n_max -= lines_read;
+    if (n_max > 0) {
+      parse_fut = std::async([&, i, sz, first_nl, total_read] {
+        lines_read = index_region(
+            buf[i],
+            idx_[1],
+            delim_.c_str(),
+            quote,
+            in_quote,
+            first_nl,
+            sz,
+            total_read,
+            n_max,
+            cols,
+            columns_,
+            empty_pb);
+      });
+    }
 
     if (write_fut.valid()) {
       write_fut.wait();
@@ -218,18 +223,18 @@ delimited_index_connection::delimited_index_connection(
 
   /* raw connections are always created as open, but we should close them */
   if (should_close) {
-    Rcpp::as<Rcpp::Function>(Rcpp::Environment::base_env()["close"])(in);
+    cpp11::package("base")["close"](in);
   }
 
   std::error_code error;
   mmap_ = make_mmap_source(filename_.c_str(), error);
   if (error) {
-    throw Rcpp::exception(error.message().c_str(), false);
+    cpp11::stop("%s", error.message().c_str());
   }
 
   size_t file_size = mmap_.size();
 
-  if (mmap_[file_size - 1] != '\n') {
+  if (!n_max_set && mmap_[file_size - 1] != '\n') {
     if (columns_ == 0 || single_line) {
       idx_[0].push_back(file_size);
       ++columns_;
