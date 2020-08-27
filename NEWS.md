@@ -1,3 +1,11 @@
+# vroom 1.3.1
+
+* Test failures on R 4.1 related to POSIXct classes fixed (#260)
+
+* Column subsetting with double indexes now works again (#257)
+
+* `vroom(n_max=)` now only partially downloads files from connections, as intended (#259)
+
 # vroom 1.3.0
 
 * The Rcpp dependency has been removed in favor of cpp11.
