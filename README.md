@@ -17,8 +17,6 @@ maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://www
 status](https://github.com/r-lib/vroom/workflows/R-CMD-check/badge.svg)](https://github.com/r-lib/vroom/actions)
 <!-- badges: end -->
 
-    #> Warning: package 'dplyr' was built under R version 4.0.2
-
 The fastest delimited reader for R, **1.48 GB/sec**.
 
 <img src="https://github.com/r-lib/vroom/raw/gh-pages/taylor.gif" align="right" width = "30%"/>

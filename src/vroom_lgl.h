@@ -33,7 +33,7 @@ inline bool isFalse(const char* start, const char* end) {
   return false;
 }
 
-inline Rboolean
+inline int
 parse_logical(const char* start, const char* end, bool strict = true) {
   auto len = end - start;
 
@@ -58,7 +58,8 @@ inline cpp11::logicals read_lgl(vroom_vec_info* info) {
         R_xlen_t i = start;
         auto col = info->column->slice(start, end);
         for (const auto& str : *col) {
-          out[i++] = parse_logical(str.begin(), str.end(), false);
+          out[i++] = static_cast<Rboolean>(
+              parse_logical(str.begin(), str.end(), false));
         }
       },
       info->num_threads);

@@ -1,5 +1,3 @@
-context("test-factor")
-
 test_that("strings mapped to levels", {
   test_vroom("a\nb\n", col_names = FALSE,
     col_types = list(X1 = col_factor(levels = c("a", "b"))),
@@ -69,7 +67,7 @@ test_that("NAs included in levels if desired", {
 
   test_vroom("NA\nb\na\n", col_names = FALSE,
     col_types = list(X1 = col_factor(levels = NULL, include_na = TRUE)),
-    equals = tibble::tibble(X1 = factor(c(NA, "b", "a"), levels = c("b", "a", NA), exclude = NULL))
+    equals = tibble::tibble(X1 = factor(c(NA, "b", "a"), levels = c(NA, "b", "a"), exclude = NULL))
   )
 })
 

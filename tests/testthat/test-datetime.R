@@ -1,5 +1,3 @@
-context("test-datetime")
-
 test_that("datetime parsing works", {
   test_vroom(
 "date,time,datetime
@@ -169,6 +167,7 @@ test_that("locale affects day of week", {
 
 test_that("locale affects am/pm", {
   skip_on_os("windows")
+  skip_on_os("solaris")
   skip_if_not(l10n_info()$`UTF-8`)
 
   expected <- hms::hms(hours = 13, minutes = 30)
@@ -216,25 +215,25 @@ test_that("unambiguous times with and without daylight savings", {
 ## Guessing ---------------------------------------------------------------------
 
 test_that("DDDD-DD not parsed as date (i.e. doesn't trigger partial date match)", {
-  expect_is(vroom("1989-90\n1990-91\n", delim = "\n")[[1]], "character")
+  expect_type(vroom("1989-90\n1990-91\n", delim = "\n", col_types = list())[[1]], "character")
 })
 
 test_that("leading zeros don't get parsed as date without explicit separator", {
-  expect_is(vroom("00010203\n", col_names = FALSE, delim = "\n")[[1]], "character")
-  expect_is(vroom("0001-02-03\n", col_names = FALSE, delim = "\n")[[1]], "Date")
+  expect_type(vroom("00010203\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "character")
+  expect_s3_class(vroom("0001-02-03\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "Date")
 })
 
 test_that("must have either two - or none", {
-  expect_is(vroom("2000-10-10\n", col_names = FALSE, delim = "\n")[[1]], "Date")
-  expect_is(vroom("2000-1010\n", col_names = FALSE, delim = "\n")[[1]], "character")
-  expect_is(vroom("200010-10\n", col_names = FALSE, delim = "\n")[[1]], "character")
-  expect_is(vroom("20001010\n", col_names = FALSE, delim = "\n")[[1]], "numeric")
+  expect_s3_class(vroom("2000-10-10\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "Date")
+  expect_type(vroom("2000-1010\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "character")
+  expect_type(vroom("200010-10\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "character")
+  expect_type(vroom("20001010\n", col_names = FALSE, delim = "\n", col_types = list())[[1]], "double")
 })
 
 test_that("times are guessed even without AM / PM", {
-  expect_is(guess_type("01:02:03"), "collector_time")
-  expect_is(guess_type("01:02:03 AM"), "collector_time")
-  expect_is(guess_type("01:02:03 PM"), "collector_time")
+  expect_s3_class(guess_type("01:02:03"), "collector_time")
+  expect_s3_class(guess_type("01:02:03 AM"), "collector_time")
+  expect_s3_class(guess_type("01:02:03 PM"), "collector_time")
 })
 
 test_that("subsetting works with both double and integer indexes", {

@@ -1,5 +1,3 @@
-context("test-vroom_write.R")
-
 test_that("empty columns just return themselves without writing anything", {
   out <- tempfile()
 
@@ -45,9 +43,9 @@ test_that("read_delim/csv/tsv and write_delim round trip special chars", {
   x <- stats::setNames(list("a", '"', ",", "\n","at\t"), paste0("V", seq_len(5)))
 
   output <- tibble::as_tibble(x)
-  output_space <- vroom(vroom_format(output, delim = " "), trim_ws = FALSE, progress = FALSE)
-  output_csv <- vroom(vroom_format(output, delim = ","), trim_ws = FALSE, progress = FALSE)
-  output_tsv <- vroom(vroom_format(output, delim = "\t"), trim_ws = FALSE, progress = FALSE)
+  output_space <- vroom(vroom_format(output, delim = " "), trim_ws = FALSE, progress = FALSE, col_types = list())
+  output_csv <- vroom(vroom_format(output, delim = ","), trim_ws = FALSE, progress = FALSE, col_types = list())
+  output_tsv <- vroom(vroom_format(output, delim = "\t"), trim_ws = FALSE, progress = FALSE, col_types = list())
   expect_equal(output_space, output)
   expect_equal(output_csv, output)
   expect_equal(output_tsv, output)
@@ -70,7 +68,7 @@ test_that("logical values give long names", {
 
 test_that("roundtrip preserved floating point numbers", {
   input <- data.frame(x = runif(100))
-  output <- vroom(vroom_format(input, delim = " "), delim = " ")
+  output <- vroom(vroom_format(input, delim = " "), delim = " ", col_types = list())
 
   expect_equal(input$x, output$x)
 })
@@ -81,7 +79,7 @@ test_that("roundtrip preserves dates and datetimes", {
   attr(y, "tzone") <- "UTC"
 
   input <- data.frame(x, y)
-  output <- vroom(vroom_format(input, delim = " "), delim = " ")
+  output <- vroom(vroom_format(input, delim = " "), delim = " ", col_types = list())
 
   expect_equal(output$x, x)
   expect_equal(output$y, y)
@@ -125,7 +123,7 @@ test_that("does not writes a trailing .0 for whole number doubles", {
 })
 
 test_that("write_csv can write to compressed files", {
-  mt <- vroom(vroom_example("mtcars.csv"))
+  mt <- vroom(vroom_example("mtcars.csv"), col_types = list())
 
   filename <- file.path(tempdir(), "mtcars.csv.bz2")
   on.exit(unlink(filename))
@@ -140,7 +138,7 @@ test_that("write_csv can write to compressed files", {
 
   expect_true(is_bz2_file(filename))
 
-  expect_equal(vroom(filename), mt)
+  expect_equal(vroom(filename, col_types = list()), mt)
 })
 
 test_that("write_csv writes large integers without scientific notation #671", {
