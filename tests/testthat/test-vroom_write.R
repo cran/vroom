@@ -53,7 +53,7 @@ test_that("read_delim/csv/tsv and write_delim round trip special chars", {
 
 test_that("special floating point values translated to text", {
   df <- data.frame(x = c(NaN, NA, Inf, -Inf))
-  expect_equal(vroom_format(df), "x\nNaN\nNA\nInf\n-Inf\n")
+  expect_equal(vroom_format(df), "x\nNA\nNA\nInf\n-Inf\n")
 })
 
 test_that("NA integer values translated to text", {
@@ -120,6 +120,10 @@ test_that("does not writes a trailing .0 for whole number doubles", {
   expect_equal(vroom_format(tibble::tibble(x = 123456789)), "x\n123456789\n")
 
   expect_equal(vroom_format(tibble::tibble(x = -123456789)), "x\n-123456789\n")
+})
+
+test_that("can write windows eol characters if desired (#263)", {
+  expect_equal(vroom_format(tibble::tibble(x = 1), eol = "\r\n"), "x\r\n1\r\n")
 })
 
 test_that("write_csv can write to compressed files", {
@@ -205,4 +209,14 @@ test_that("vroom_write(append = TRUE) works with R connections", {
   vroom::vroom_write(df, f, append = TRUE)
 
   expect_equal(vroom_lines(f), c("x\ty", "1\t2", "1\t2"))
+})
+
+test_that("vroom_write() works with an empty delimiter", {
+  df <- data.frame(x = "foo", y = "bar")
+
+  f <- tempfile(, fileext = ".tsv.gz")
+  on.exit(unlink(f))
+
+  vroom::vroom_write(df, f, delim = "")
+  expect_equal(vroom_lines(f), c("xy", "foobar"))
 })

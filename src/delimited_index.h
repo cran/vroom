@@ -19,6 +19,7 @@
 #include <array>
 
 #include "multi_progress.h"
+#include "vroom_errors.h"
 
 namespace vroom {
 
@@ -29,6 +30,7 @@ struct cell {
 
 class delimited_index : public index,
                         public std::enable_shared_from_this<delimited_index> {
+  class newline_error {};
 
 public:
   delimited_index(
@@ -41,7 +43,8 @@ public:
       const bool has_header,
       const size_t skip,
       size_t n_max,
-      const char comment,
+      const char* comment,
+      std::shared_ptr<vroom_errors> errors,
       const size_t num_threads,
       const bool progress,
       const bool use_threads = true);
@@ -80,6 +83,9 @@ public:
       size_t i = ((n + idx_->has_header_) * idx_->columns_) + column_;
       return idx_->get_trimmed_val(i, is_first_, is_last_);
     }
+    std::string filename() const { return idx_->filename_; }
+    size_t index() const { return i_ / idx_->columns_; }
+    size_t position() const { return i_; }
     virtual ~column_iterator() = default;
   };
 
@@ -112,6 +118,11 @@ public:
       size_t i = (row_ + idx_->has_header_) * idx_->columns_ + n;
       return idx_->get_trimmed_val(i, i == 0, i == (idx_->columns_ - 1));
     }
+    std::string filename() const { return idx_->filename_; }
+    size_t index() const {
+      return i_ - (row_ + idx_->has_header_) * idx_->columns_;
+    }
+    size_t position() const { return i_; }
     virtual ~row_iterator() = default;
   };
 
@@ -131,21 +142,21 @@ public:
     auto begin = new column_iterator(shared_from_this(), column);
     auto end = new column_iterator(shared_from_this(), column);
     end->advance(num_rows());
-    return std::make_shared<vroom::delimited_index::column>(begin, end);
+    return std::make_shared<vroom::delimited_index::column>(begin, end, column);
   }
 
   std::shared_ptr<vroom::index::row> get_row(size_t row) const {
     auto begin = new row_iterator(shared_from_this(), row);
     auto end = new row_iterator(shared_from_this(), row);
     end->advance(num_columns());
-    return std::make_shared<vroom::delimited_index::row>(begin, end);
+    return std::make_shared<vroom::delimited_index::row>(begin, end, row);
   }
 
   std::shared_ptr<vroom::index::row> get_header() const {
     auto begin = new row_iterator(shared_from_this(), -1);
     auto end = new row_iterator(shared_from_this(), -1);
     end->advance(num_columns());
-    return std::make_shared<vroom::delimited_index::row>(begin, end);
+    return std::make_shared<vroom::delimited_index::row>(begin, end, 0);
   }
 
 public:
@@ -160,7 +171,7 @@ public:
   bool escape_backslash_;
   bool windows_newlines_;
   size_t skip_;
-  char comment_;
+  const char* comment_;
   size_t rows_;
   size_t columns_;
   bool progress_;
@@ -203,8 +214,10 @@ public:
       const size_t n_max,
       size_t& cols,
       const size_t num_cols,
+      std::shared_ptr<vroom_errors> errors,
       P& pb,
-      const size_t update_size = -1) {
+      const size_t num_threads,
+      const size_t update_size) {
 
     // If there are no quotes quote will be '\0', so will just work
     std::array<char, 5> query = {delim[0], '\n', '\\', quote, '\0'};
@@ -228,6 +241,12 @@ public:
 
       else if (c == '\n') {
         if (in_quote) { // This will work as long as num_threads = 1
+          if (num_threads != 1) {
+            if (progress_ && pb) {
+              pb->finish();
+            }
+            throw newline_error();
+          }
           ++pos;
           continue;
         }
@@ -235,14 +254,19 @@ public:
         // Ensure columns are consistent
         if (num_cols > 0 && pos > start) {
           // Remove extra columns if there are too many
-          while (cols >= num_cols) {
-            destination.pop_back();
-            --cols;
-          }
-          // Add additional columns if there are too few
-          while (cols < num_cols - 1) {
-            destination.push_back(pos + file_offset - windows_newlines_);
-            ++cols;
+          if (cols >= num_cols) {
+            errors->add_parse_error(pos + file_offset, cols);
+            while (cols >= num_cols) {
+              destination.pop_back();
+              --cols;
+            }
+          } else if (cols < num_cols - 1) {
+            errors->add_parse_error(pos + file_offset, cols);
+            // Add additional columns if there are too few
+            while (cols < num_cols - 1) {
+              destination.push_back(pos + file_offset - windows_newlines_);
+              ++cols;
+            }
           }
         }
 
@@ -268,12 +292,26 @@ public:
         ++pos;
       }
 
-      else if (c == '\0') {
-        break;
-      }
-
       else if (c == quote) {
-        in_quote = !in_quote;
+        /* not already in a quote */
+        if (!in_quote &&
+            /* right after the start of file or line */
+            (pos == start || buf[pos - 1] == '\n' ||
+             /* or after a delimiter */
+             strncmp(delim, buf + (pos - delim_len_), delim_len_) == 0)) {
+          in_quote = !in_quote;
+        } else if (
+            /* already in a quote */
+            in_quote &&
+            /* right at the end of the file or line */
+            (pos == end - 1 ||
+             ((!windows_newlines_ && (pos + 1 < end && buf[pos + 1] == '\n')) ||
+              (windows_newlines_ && (pos + 2 < end && buf[pos + 2] == '\n'))) ||
+             /* or before a delimiter */
+             (pos + delim_len_ + 1 < end &&
+              strncmp(delim, buf + (pos + 1), delim_len_) == 0))) {
+          in_quote = !in_quote;
+        }
       }
 
       ++pos;

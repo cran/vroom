@@ -1,3 +1,37 @@
+# vroom 1.4.0
+
+## Major changes and new functions
+
+* vroom now tracks indexing and parsing errors like readr. The first time an issue is encountered a warning will be signaled. A tibble of all found problems can be retrieved with `vroom::problems()`. (#247)
+
+* Data with newlines within quoted fields will now automatically revert to using a single thread and be properly read (#282)
+
+* NUL values in character data are now permitted, with a warning.
+
+* New `vroom_write_lines()` function to write a character vector to a file (#291)
+
+* `vroom_write()` gains a `eol=` parameter to specify the end of line character(s) to use. Use `vroom_write(eol = "\r\n")` to write a file with Windows style newlines (#263).
+
+## Minor improvements and fixes
+
+* Datetime formats used when guessing now match those used when parsing (#240)
+
+* Quotes are now only valid next to newlines or delimiters (#224)
+
+* `vroom()` now signals an R error for invalid date and datetime formats, instead of crashing the session (#220).
+
+* `vroom(comment = )` now accepts multi-character comments (#286)
+
+* `vroom_lines()` now works with empty files (#285)
+
+* Vectors are now subset properly when given invalid subscripts (#283)
+
+* `vroom_write()` now works when the delimiter is empty, e.g. `delim = ""` (#287).
+
+* `vroom_write()` now works with all ALTREP vectors, including string vectors (#270)
+
+* An internal call to `new.env()` now correctly uses the `parent` argument (#281)
+
 # vroom 1.3.2
 
 * Test failures on R 4.1 related to factors with NA values fixed (#262)

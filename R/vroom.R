@@ -10,8 +10,8 @@ NULL
 #'   file. If `NULL` the delimiter is guessed from the set of `c(",", "\t", " ",
 #'   "|", ":", ";")`.
 #' @param num_threads Number of threads to use when reading and materializing
-#'   vectors. If your data contains embedded newlines (newlines within fields)
-#'   you _must_ use `num_threads = 1` to read the data properly.
+#'   vectors. If your data contains newlines within fields the parser will
+#'   automatically be forced to use a single thread only.
 #' @param escape_double Does the file escape quotes by doubling them?
 #'   i.e. If this option is `TRUE`, the value '""' represents
 #'   a single quote, '"'.
@@ -157,6 +157,7 @@ vroom <- function(
   out[is_null] <- NULL
 
   out <- tibble::as_tibble(out, .name_repair = .name_repair)
+  class(out) <- c("spec_tbl_df", class(out))
 
   out <- vroom_select(out, col_select, id)
 
@@ -267,7 +268,7 @@ guess_delim <- function(lines, delims = c(",", "\t", " ", "|", ":", ";")) {
   delims[[top_idx]]
 }
 
-cached <- new.env(emptyenv())
+cached <- new.env(parent = emptyenv())
 
 vroom_threads <- function() {
   res <- as.integer(
@@ -347,13 +348,13 @@ vroom_altrep <- function(which = NULL) {
     getRversion() >= "3.5.0" && which$chr %||% vroom_use_altrep_chr(),
     getRversion() >= "3.5.0" && which$fct %||% vroom_use_altrep_fct(),
     getRversion() >= "3.5.0" && which$int %||% vroom_use_altrep_int(),
-    getRversion() >= "3.5.0" && which$int %||% vroom_use_altrep_big_int(),
     getRversion() >= "3.5.0" && which$dbl %||% vroom_use_altrep_dbl(),
     getRversion() >= "3.5.0" && which$num %||% vroom_use_altrep_num(),
     getRversion() >= "3.6.0" && which$lgl %||% vroom_use_altrep_lgl(), # logicals only supported in R 3.6.0+
     getRversion() >= "3.5.0" && which$dttm %||% vroom_use_altrep_dttm(),
     getRversion() >= "3.5.0" && which$date %||% vroom_use_altrep_date(),
-    getRversion() >= "3.5.0" && which$time %||% vroom_use_altrep_time()
+    getRversion() >= "3.5.0" && which$time %||% vroom_use_altrep_time(),
+    getRversion() >= "3.5.0" && which$big_int %||% vroom_use_altrep_big_int()
   )
 
   out <-  0L
@@ -387,8 +388,8 @@ altrep_vals <- function() c(
   "dttm" = 64L,
   "date" = 128L,
   "time" = 256L,
-# "skip" = 512L
-  "big_int" = 1024L
+  "big_int" = 512L,
+  "skip" = 1024L
 )
 
 #' @export

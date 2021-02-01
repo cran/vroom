@@ -44,6 +44,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
 
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
@@ -132,6 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   }
 })();
 </script>
+
 
 
 
@@ -354,7 +364,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co"># See where the example file is stored on your machine</span></span>
 <span id="cb2-2"><a href="#cb2-2"></a>file &lt;-<span class="st"> </span><span class="kw">vroom_example</span>(<span class="st">&quot;mtcars.csv&quot;</span>)</span>
 <span id="cb2-3"><a href="#cb2-3"></a>file</span>
-<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; [1] &quot;/private/var/folders/9x/_8jnmxwj3rq1t90mlr6_0k1w0000gn/T/RtmpMm91mF/Rinstc9865c54b999/vroom/extdata/mtcars.csv&quot;</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="co">#&gt; [1] &quot;/private/var/folders/9x/_8jnmxwj3rq1t90mlr6_0k1w0000gn/T/Rtmp8pKuLj/Rinstdadf2f0a7a23/vroom/extdata/mtcars.csv&quot;</span></span>
 <span id="cb2-5"><a href="#cb2-5"></a></span>
 <span id="cb2-6"><a href="#cb2-6"></a><span class="co"># Read the file, by default vroom will guess the delimiter automatically.</span></span>
 <span id="cb2-7"><a href="#cb2-7"></a><span class="kw">vroom</span>(file)</span>

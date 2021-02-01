@@ -2,7 +2,8 @@
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  dev = "svg"
+  dev = "svg",
+  eval = capabilities("cairo")
 )
 
 library(ggplot2)
