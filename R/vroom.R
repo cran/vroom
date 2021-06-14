@@ -29,6 +29,10 @@ NULL
 #'   either a character vector of types, `TRUE` or `FALSE`. See
 #'   [vroom_altrep()] for for full details.
 #' @param altrep_opts \Sexpr[results=rd, stage=render]{lifecycle::badge("deprecated")}
+#' @param show_col_types Control showing the column specifications. If `TRUE`
+#'   column specifications are always show, if `FALSE` they are never shown. If
+#'   `NULL` (the default) they are shown only if an explicit specification is not
+#'   given to `col_types`.
 #' @export
 #' @examples
 #' # get path to example file
@@ -40,7 +44,7 @@ NULL
 #' # Input sources -------------------------------------------------------------
 #' # Read from a path
 #' vroom(input_file)
-#' # You can also use literal paths directly
+#' # You can also use paths directly
 #' # vroom("mtcars.csv")
 #'
 #' \dontrun{
@@ -48,8 +52,8 @@ NULL
 #' vroom("https://github.com/r-lib/vroom/raw/master/inst/extdata/mtcars.csv")
 #' }
 #'
-#' # Or directly from a string (must contain a trailing newline)
-#' vroom("x,y\n1,2\n3,4\n")
+#' # Or directly from a string with `I()`
+#' vroom(I("x,y\n1,2\n3,4\n"))
 #'
 #' # Column selection ----------------------------------------------------------
 #' # Pass column names or indexes directly to select them
@@ -65,19 +69,19 @@ NULL
 #' # Column types --------------------------------------------------------------
 #' # By default, vroom guesses the columns types, looking at 1000 rows
 #' # throughout the dataset.
-#' # You can specify them explcitly with a compact specification:
-#' vroom("x,y\n1,2\n3,4\n", col_types = "dc")
+#' # You can specify them explicitly with a compact specification:
+#' vroom(I("x,y\n1,2\n3,4\n"), col_types = "dc")
 #'
 #' # Or with a list of column types:
-#' vroom("x,y\n1,2\n3,4\n", col_types = list(col_double(), col_character()))
+#' vroom(I("x,y\n1,2\n3,4\n"), col_types = list(col_double(), col_character()))
 #'
 #' # File types ----------------------------------------------------------------
 #' # csv
-#' vroom("a,b\n1.0,2.0\n", delim = ",")
+#' vroom(I("a,b\n1.0,2.0\n"), delim = ",")
 #' # tsv
-#' vroom("a\tb\n1.0\t2.0\n")
+#' vroom(I("a\tb\n1.0\t2.0\n"))
 #' # Other delimiters
-#' vroom("a|b\n1.0|2.0\n", delim = "|")
+#' vroom(I("a|b\n1.0|2.0\n"), delim = "|")
 #'
 #' # Read datasets across multiple files ---------------------------------------
 #' mtcars_by_cyl <- vroom_example(vroom_examples("mtcars-"))
@@ -97,6 +101,7 @@ vroom <- function(
   na = c("", "NA"),
   quote = '"',
   comment = "",
+  skip_empty_rows = TRUE,
   trim_ws = TRUE,
   escape_double = TRUE,
   escape_backslash = FALSE,
@@ -106,6 +111,7 @@ vroom <- function(
   altrep_opts = deprecated(),
   num_threads = vroom_threads(),
   progress = vroom_progress(),
+  show_col_types = NULL,
   .name_repair = "unique"
   ) {
 
@@ -115,6 +121,11 @@ vroom <- function(
   }
 
   file <- standardise_path(file)
+
+  if (!is_ascii_compatible(locale$encoding)) {
+    file <- reencode_path(file, locale$encoding)
+    locale$encoding <- "UTF-8"
+  }
 
   if (length(file) == 0 || (n_max == 0 & identical(col_names, FALSE))) {
     return(tibble::tibble())
@@ -138,7 +149,7 @@ vroom <- function(
 
   col_select <- vroom_enquo(rlang::enquo(col_select))
 
-  has_spec <- !is.null(col_types)
+  has_col_types <- !is.null(col_types)
 
   col_types <- as.col_spec(col_types)
 
@@ -148,7 +159,8 @@ vroom <- function(
     col_types = col_types, id = id, skip = skip, col_select = col_select,
     name_repair = .name_repair,
     na = na, quote = quote, trim_ws = trim_ws, escape_double = escape_double,
-    escape_backslash = escape_backslash, comment = comment, locale = locale,
+    escape_backslash = escape_backslash, comment = comment,
+    skip_empty_rows = skip_empty_rows, locale = locale,
     guess_max = guess_max, n_max = n_max, altrep = vroom_altrep(altrep),
     num_threads = num_threads, progress = progress)
 
@@ -156,16 +168,32 @@ vroom <- function(
   is_null <- vapply(out, is.null, logical(1))
   out[is_null] <- NULL
 
-  out <- tibble::as_tibble(out, .name_repair = .name_repair)
+  # If no rows expand columns to be the same length and names as the spec
+  if (NROW(out) == 0) {
+    cols <- attr(out, "spec")[["cols"]]
+    for (i in seq_along(cols)) {
+      out[[i]] <- collector_value(cols[[i]])
+    }
+    names(out) <- names(cols)
+  }
+
+  out <- tibble::as_tibble(out, .name_repair = identity)
   class(out) <- c("spec_tbl_df", class(out))
 
   out <- vroom_select(out, col_select, id)
 
-  if (!has_spec) {
-    show_spec_summary(out, locale = locale)
+  if (should_show_col_types(has_col_types, show_col_types)) {
+    show_col_types(out, locale)
   }
 
   out
+}
+
+should_show_col_types <- function(has_col_types, show_col_types) {
+  if (is.null(show_col_types)) {
+    return(isTRUE(!has_col_types))
+  }
+  isTRUE(show_col_types)
 }
 
 make_names <- function(x, len) {

@@ -1,9 +1,7 @@
 ## ---- include = FALSE---------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>",
-  dev = "svg",
-  eval = capabilities("cairo")
+  comment = "#>"
 )
 
 library(ggplot2)
@@ -142,7 +140,7 @@ plot_benchmark(all_chr_wide, "Time to analyze wide all character data")
 
 make_table(all_chr_wide)
 
-## ---- echo = FALSE, message = FALSE-------------------------------------------
+## ---- echo = FALSE, message = FALSE, eval = TRUE------------------------------
 mult <- read_benchmark(path_package("vroom", "bench", "taxi_multiple.tsv"), desc)
 
 ## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
@@ -150,7 +148,7 @@ plot_benchmark(mult, "Time to analyze multiple file data")
 
 make_table(mult)
 
-## ---- echo = FALSE, message = FALSE-------------------------------------------
+## ---- echo = FALSE, message = FALSE, eval = TRUE------------------------------
 fwf <- read_benchmark(path_package("vroom", "bench", "fwf.tsv"), desc)
 
 ## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----

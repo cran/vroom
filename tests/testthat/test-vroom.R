@@ -197,7 +197,7 @@ test_that("vroom handles vectors shorter than the UTF byte order marks", {
 test_that("vroom handles windows newlines", {
 
   expect_equal(
-    vroom("a\tb\r\n1\t2\r\n", trim_ws = FALSE, col_types = list())[[1]],
+    vroom(I("a\tb\r\n1\t2\r\n"), trim_ws = FALSE, col_types = list())[[1]],
     1
   )
 })
@@ -241,7 +241,7 @@ test_that("vroom_example() returns a single example files", {
 })
 
 test_that("subsets work", {
-  res <- vroom("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14", delim = "\n", col_names = FALSE, col_types = list())
+  res <- vroom(I("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14"), delim = "\t", col_names = FALSE, col_types = list())
   expect_equal(head(res[[1]]), c(1:6))
   expect_equal(tail(res[[1]]), c(9:14))
 
@@ -337,29 +337,25 @@ test_that("vroom uses the number of rows when guess_max = Inf", {
   vroom_write(df, tf, delim = "\t")
 
   # The type should be guessed wrong, because the character comes at the end
-  res <- expect_warning(vroom(tf, delim = "\n", col_types = list(), altrep = FALSE))
+  res <- expect_warning(vroom(tf, delim = "\t", col_types = list(), altrep = FALSE))
   expect_type(res[["x"]], "double")
   expect_true(is.na(res[["x"]][[NROW(res)]]))
 
   # The value should exist with guess_max = Inf
-  res <- vroom(tf, delim = "\n", guess_max = Inf, col_types = list())
+  res <- vroom(tf, delim = "\t", guess_max = Inf, col_types = list())
   expect_type(res[["x"]], "character")
   expect_equal(res[["x"]][[NROW(res)]], "foo")
 })
 
 test_that("vroom adds columns if a row is too short", {
-  expect_warning(
-    test_vroom("a,b,c,d\n1,2\n3,4,5,6\n", delim = ",",
+  test_vroom("a,b,c,d\n1,2\n3,4,5,6\n", delim = ",",
     equals = tibble::tibble("a" = c(1,3), "b" = c(2,4), "c" = c(NA, 5), "d" = c(NA, 6))
-    )
   )
 })
 
 test_that("vroom removes columns if a row is too long", {
-  expect_warning(
-    test_vroom("a,b,c,d\n1,2,3,4,5,6,7\n8,9,10,11\n", delim = ",", col_types = c(d = "c"),
-      equals = tibble::tibble("a" = c(1,8), "b" = c(2,9), "c" = c(3, 10), "d" = c("4,5,6,7", "11"))
-    )
+  test_vroom("a,b,c,d\n1,2,3,4,5,6,7\n8,9,10,11\n", delim = ",", col_types = c(d = "c"),
+    equals = tibble::tibble("a" = c(1,8), "b" = c(2,9), "c" = c(3, 10), "d" = c("4,5,6,7", "11"))
   )
 })
 
@@ -378,21 +374,19 @@ test_that("guess_type works with long strings (#74)", {
 })
 
 test_that("vroom errors if unnamed column types do not match the number of columns", {
-  expect_error(vroom("a,b\n1,2\n", col_types = "i"), "must have the same length")
+  expect_error(vroom(I("a,b\n1,2\n"), col_types = "i"), "must have the same length")
 })
 
 test_that("column names are properly encoded", {
   skip_on_os("solaris")
 
-  nms <- vroom("f\U00F6\U00F6\nbar\n", delim = "\n", col_types = list())
+  nms <- vroom(I("f\U00F6\U00F6\nbar\n"), delim = "\n", col_types = list())
   expect_equal(Encoding(colnames(nms)), "UTF-8")
 })
 
 test_that("Files with windows newlines and missing fields work", {
-  expect_warning(
-    test_vroom("a,b,c,d\r\nm,\r\n\r\n", delim = ",",
-      equals = tibble::tibble(a = c("m", NA), b = c(NA, NA), c = c(NA, NA), d = c(NA, NA))
-    )
+  test_vroom("a,b,c,d\r\nm,\r\n\r\n", delim = ",", skip_empty_rows = FALSE,
+    equals = tibble::tibble(a = c("m", NA), b = c(NA, NA), c = c(NA, NA), d = c(NA, NA))
   )
 })
 
@@ -401,7 +395,7 @@ test_that("vroom can read files with no trailing newline", {
   on.exit(unlink(f))
 
   writeBin(charToRaw("foo\nbar"), f)
-  expect_equal(vroom(f, col_names = FALSE, delim = "\n", col_types = list())[[1]], c("foo", "bar"))
+  expect_equal(vroom(f, col_names = FALSE, delim = ",", col_types = list())[[1]], c("foo", "bar"))
 
   f2 <- tempfile()
   on.exit(unlink(f2), add = TRUE)
@@ -417,7 +411,7 @@ test_that("Missing files error with a nice error message", {
 })
 
 test_that("Can return the spec object", {
-  x <- vroom("foo,bar\n1,c\n", col_types = list())
+  x <- vroom(I("foo,bar\n1,c\n"), col_types = list())
   obj <- spec(x)
   expect_s3_class(obj, "col_spec")
   exp <- as.col_spec(list(foo = "d", bar = "c"))
@@ -442,18 +436,18 @@ test_that("vroom handles files with trailing commas, windows newlines, missing a
 test_that("vroom uses the delim if it is specified in the col_types", {
   # if we give a tab delim in the spec there should only be one column
   expect_equal(
-    ncol(vroom("a,b,c\n1,2,3\n", col_types = list(.delim = "\t"))),
+    ncol(vroom(I("a,b,c\n1,2,3\n"), col_types = list(.delim = "\t"))),
     1
   )
 
   # But specifying an explicit delim overrides the spec
   expect_equal(
-    ncol(vroom("a,b,c\n1,2,3\n", col_types = list(.delim = "\t"), delim = ",")),
+    ncol(vroom(I("a,b,c\n1,2,3\n"), col_types = list(.delim = "\t"), delim = ",")),
     3
   )
 
   expect_equal(
-    ncol(vroom("a,b,c\n1,2,3\n", col_types = list(.delim = ","), delim = "\t")),
+    ncol(vroom(I("a,b,c\n1,2,3\n"), col_types = list(.delim = ","), delim = "\t")),
     1
   )
 })
@@ -466,7 +460,7 @@ test_that("vroom supports NA and NA_integer_ indices", {
 })
 
 test_that("vroom supports NA and NA_integer_ indices with factors and datetimes", {
-  data <- vroom("x\ty\nfoo\t2020-01-01 12:00:01", col_types = "fT")
+  data <- vroom(I("x\ty\nfoo\t2020-01-01 12:00:01"), col_types = "fT")
 
   expect_equal(data[NA, 1, drop = TRUE], factor(NA, levels = "foo"))
   expect_equal(data[NA, 2, drop = TRUE], .POSIXct(NA_real_, tz = "UTC"))
@@ -505,7 +499,7 @@ test_that("vroom works with n_max, windows newlines and files larger than the co
 })
 
 test_that("subsetting works with both double and integer indexes", {
-  x <- vroom("X1\nfoo", delim = ",", col_types = list())
+  x <- vroom(I("X1\nfoo"), delim = ",", col_types = list())
   expect_equal(x$X1[1L], "foo")
   expect_equal(x$X1[1], "foo")
   expect_equal(x$X1[NA_integer_], NA_character_)
@@ -513,19 +507,19 @@ test_that("subsetting works with both double and integer indexes", {
 })
 
 test_that("quotes inside fields are ignored", {
-  x <- vroom("x\nfoo\"bar\nbaz\n", delim = ",", quote = "\"")
+  x <- vroom(I("x\nfoo\"bar\nbaz\n"), delim = ",", quote = "\"", col_types = list())
   expect_equal(x$x[[1]], "foo\"bar")
   expect_equal(x$x[[2]], "baz")
 })
 
 test_that("quotes at the beginning and end of lines are used", {
-  y <- vroom("x\n\"foo\"\"bar\"\nbaz\n", delim = ",", quote = "\"")
+  y <- vroom(I("x\n\"foo\"\"bar\"\nbaz\n"), delim = ",", quote = "\"", col_types = list())
   expect_equal(y$x[[1]], "foo\"bar")
   expect_equal(y$x[[2]], "baz")
 })
 
 test_that("quotes at delimiters are used", {
-  z <- vroom("x,y,z\n1,\"foo\"\"bar\",2\n3,baz,4", delim = ",", quote = "\"")
+  z <- vroom(I("x,y,z\n1,\"foo\"\"bar\",2\n3,baz,4"), delim = ",", quote = "\"", col_types = list())
   expect_equal(z$y[[1]], "foo\"bar")
   expect_equal(z$y[[2]], "baz")
 })
@@ -539,13 +533,13 @@ test_that("vroom reads files with embedded newlines even when num_threads > 1", 
   writeLines(c("x", rep("foo", 1000), '"bar\nbaz"', rep("qux", 1000)), con, sep = "\n")
   close(con)
 
-  res <- vroom(tf, delim = ",", num_threads = 5)
+  res <- vroom(tf, delim = ",", num_threads = 5, col_types = list())
   expect_equal(nrow(res), 1000 + 1 + 1000)
   expect_equal(res$x[[1001]], "bar\nbaz")
 })
 
 test_that("multi-character comments are supported", {
-  res <- vroom("## this is a comment\n# this is not", delim = "\t", comment = "##", col_names = FALSE)
+  res <- vroom(I("## this is a comment\n# this is not"), delim = "\t", comment = "##", col_names = FALSE, col_types = list())
   expect_equal(res[[1]], "# this is not")
 })
 
@@ -555,14 +549,169 @@ test_that("vroom works with quoted fields at the end of a windows newline", {
   con <- file(f, "wb")
   writeLines(c('"x"', 1), con, sep = "\r\n")
   close(con)
-  res <- vroom(f, delim = ",", col_names = FALSE)
+  res <- vroom(f, delim = ",", col_names = FALSE, col_types = list())
   expect_equal(res[[1]], c("x", 1))
 })
 
 test_that("vroom can handle NUL characters in strings", {
-  expect_warning(
-  expect_warning(
-  expect_warning(test_vroom(test_path("raw.csv"), delim = ",", progress = FALSE,
+  test_vroom(test_path("raw.csv"), delim = ",", progress = FALSE,
     equals = tibble::tibble(abc = "ab", def = "def")
-  ))))
+  )
+})
+
+test_that("n_max is respected in all cases", {
+  expect_equal(dim(vroom(I("x\ty\tz\n1\t2\t3\n4\t5\t6\n"), n_max = 1, col_types = list())), c(1, 3))
+})
+
+test_that("comments are ignored regardless of where they appear", {
+
+  out1 <- vroom(I('x\n1#comment'), comment = "#", col_types = "d", delim = ",")
+  out2 <- vroom(I('x\n1#comment\n#comment'), comment = "#", col_types = "d", delim = ",")
+  out3 <- vroom(I('x\n"1"#comment'), comment = "#", col_types = "d", delim = ",")
+
+  expect_equal(out1$x, 1)
+  expect_equal(out2$x, 1)
+  expect_equal(out3$x, 1)
+
+  out4 <- vroom(I('x,y\n1,#comment'), comment = "#", delim = ",", col_types = "cc", progress = FALSE, altrep = FALSE)
+  expect_equal(out4$y, NA_character_)
+
+  expect_warning(out5 <- vroom(I("x1,x2,x3\nA2,B2,C2\nA3#,B2,C2\nA4,A5,A6"), comment = "#", delim = ",", col_types = "ccc", altrep = FALSE, progress = FALSE))
+  expect_warning(out6 <- vroom(I("x1,x2,x3\nA2,B2,C2\nA3,#B2,C2\nA4,A5,A6"), comment = "#", delim = ",", col_types = "ccc", altrep = FALSE, progress = FALSE))
+  expect_warning(out7 <- vroom(I("x1,x2,x3\nA2,B2,C2\nA3,#B2,C2\n#comment\nA4,A5,A6"), comment = "#", delim = ",", col_types = "ccc", altrep = FALSE, progress = FALSE))
+
+  chk <- tibble::tibble(
+    x1 = c("A2", "A3", "A4"),
+    x2 = c("B2", NA_character_, "A5"),
+    x3 = c("C2", NA_character_, "A6"))
+
+  expect_true(all.equal(chk, out5, check.attributes = FALSE))
+  expect_true(all.equal(chk, out6, check.attributes = FALSE))
+  expect_true(all.equal(chk, out7, check.attributes = FALSE))
+})
+
+test_that("escaped/quoted comments are ignored", {
+  out1 <- vroom(I('x\n\\#'), comment = "#", delim = ",",
+    escape_backslash = TRUE, escape_double = FALSE, progress = FALSE, col_types = "c")
+  out2 <- vroom(I('x\n"#"'), comment = "#", progress = FALSE, delim = ",", col_types = "c")
+
+  expect_equal(out1$x, "#")
+  expect_equal(out2$x, "#")
+})
+
+test_that("name repair with custom functions works", {
+  add_y <- function(x) {
+    paste(x, "y", sep = "_")
+  }
+  out <- vroom(I("x,y,z\n1,2,3"), col_types = "iii", .name_repair = add_y)
+  expect_equal(colnames(out), c("x_y", "y_y", "z_y"))
+})
+
+test_that("col_types are based on the final (possibly repaired) column names (#311)", {
+  suppressMessages(
+    out <- vroom(I("x,\n1,2\n3,4"), delim = ",", col_types = list(x = col_double(), "...2" = col_double()))
+  )
+  expect_equal(out[["...2"]], c(2, 4))
+})
+
+test_that("mismatched column names throw a classed warning", {
+  expect_warning(
+    vroom(
+      I("x,y\n1,2\n3,4\n"),
+      col_types = list(
+        x = col_double(),
+        y = col_double(),
+        z = col_double()
+      )
+    ),
+    class = "vroom_mismatched_column_name"
+  )
+})
+
+test_that("empty files still generate the correct column width and types", {
+  out <- vroom(I(""), col_names = c("foo", "bar"), col_types = list())
+  expect_equal(nrow(out), 0)
+  expect_equal(ncol(out), 2)
+  expect_equal(names(out), c("foo", "bar"))
+  expect_type(out[[1]], "character")
+  expect_type(out[[2]], "character")
+
+  out <- vroom(I(""), col_types = "ii")
+  expect_equal(nrow(out), 0)
+  expect_equal(ncol(out), 2)
+  expect_equal(names(out), c("X1", "X2"))
+  expect_type(out[[1]], "integer")
+  expect_type(out[[2]], "integer")
+})
+
+test_that("leading whitespace effects guessing", {
+  out <- vroom(I('a,b,c\n 1,2,3\n'), delim = ",", trim_ws = FALSE, progress = FALSE, col_types = list())
+  expect_type(out[[1]], "character")
+
+  out <- vroom(I('a,b,c\n 1,2,3\n'), delim = ",", trim_ws = TRUE, progress = FALSE, col_types = list())
+  expect_type(out[[1]], "double")
+})
+
+test_that("UTF-16LE encodings can be read", {
+  bom <- as.raw(c(255, 254))
+  # This is the text.
+  text <- "x,y\n\U104371,2\n" # This is a 4 byte UTF-16 character from https://en.wikipedia.org/wiki/UTF-16
+
+  # Converted to UTF-16LE
+  text_utf16 <- iconv(text,from="UTF-8", to="UTF-16LE", toRaw = TRUE)[[1]]
+
+  # Write the BOM and the text to a file
+  tmp_file_name <- tempfile()
+  fd <- file(tmp_file_name, "wb")
+  writeBin(bom, fd)
+  writeBin(text_utf16, fd)
+  close(fd)
+
+  # Whether LE or BE is determined automatically by the BOM
+  out <- vroom(tmp_file_name, locale = locale(encoding = "UTF-16"), col_types = "ci")
+  expect_equal(out$x, "\U104371")
+  expect_equal(out$y, 2)
+})
+
+test_that("supports unicode grouping and decimal marks (https://github.com/tidyverse/readr/issues/796)", {
+  test_vroom(I("1\u00A0234\u02D95"),
+    locale = locale(grouping_mark = "\u00A0", decimal_mark = "\u02D9"),
+    col_types = "n", col_names = FALSE, delim = ",",
+    equals = tibble::tibble(X1 = 1234.5)
+  )
+})
+
+test_that("handles quotes within skips", {
+
+  data <- I(paste0(collapse = "\n",
+    c("a\tb\tc",
+      "1a\t1b\t1c",
+      "2a\t2b\t2c\"",
+      "3a\t3b\t3c\"",
+      "4a\t4b\t4c"
+  )))
+
+  test_vroom(data, col_names = c("a", "b", "c"), skip = 2, quote = "", delim = "\t",
+    equals = tibble::tibble(
+      a = c("2a", "3a", "4a"),
+      b = c("2b", "3b", "4b"),
+      c = c("2c\"", "3c\"", "4c")
+    )
+  )
+
+  test_vroom(data, col_names = c("a", "b", "c"), skip = 3, quote = "", delim = "\t",
+    equals = tibble::tibble(
+      a = c("3a", "4a"),
+      b = c("3b", "4b"),
+      c = c("3c\"", "4c")
+    )
+  )
+
+  test_vroom(data, col_names = c("a", "b", "c"), skip = 4, quote = "", delim = "\t",
+    equals = tibble::tibble(
+      a = c("4a"),
+      b = c("4b"),
+      c = c("4c")
+    )
+  )
 })

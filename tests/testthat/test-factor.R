@@ -15,11 +15,9 @@ test_that("can generate ordered factor", {
 })
 
 test_that("NA if value not in levels", {
-  expect_warning(
-    test_vroom("a\nb\nc\n", col_names = FALSE,
-      col_types = list(X1 = col_factor(levels = c("a", "b"))),
-      equals = tibble::tibble(X1 = factor(c("a", "b", NA)))
-    )
+  test_vroom("a\nb\nc\n", col_names = FALSE,
+    col_types = list(X1 = col_factor(levels = c("a", "b"))),
+    equals = tibble::tibble(X1 = factor(c("a", "b", NA)))
   )
 })
 
@@ -90,17 +88,13 @@ test_that("Factors handle encodings properly (#615)", {
 })
 
 test_that("factors parse like factor if trim_ws = FALSE", {
-  expect_warning(
-    test_vroom("a\na \n", col_names = FALSE, trim_ws = FALSE,
-      col_types = list(X1 = col_factor(levels = "a")),
-      equals = tibble::tibble(X1 = factor(c("a", "a "), levels = c("a")))
-    )
+  test_vroom("a\na \n", col_names = FALSE, trim_ws = FALSE,
+    col_types = list(X1 = col_factor(levels = "a")),
+    equals = tibble::tibble(X1 = factor(c("a", "a "), levels = c("a")))
   )
-  expect_warning(
-    test_vroom("a\na \n", col_names = FALSE, trim_ws = FALSE,
-      col_types = list(X1 = col_factor(levels = "a ")),
-      equals = tibble::tibble(X1 = factor(c("a", "a "), levels = c("a ")))
-    )
+  test_vroom("a\na \n", col_names = FALSE, trim_ws = FALSE,
+    col_types = list(X1 = col_factor(levels = "a ")),
+    equals = tibble::tibble(X1 = factor(c("a", "a "), levels = c("a ")))
   )
   test_vroom("a\na \n", col_names = FALSE, trim_ws = FALSE,
     col_types = list(X1 = col_factor(levels = c("a ", "a"))),
@@ -115,7 +109,9 @@ test_that("Can parse a factor with levels of NA and empty string", {
   x_in <- paste0(paste(x, collapse = "\n"), "\n")
 
   test_vroom(x_in, col_names = FALSE,
-    col_types = list(X1 = col_factor(levels = c("NA", "NB", "NC", ""))), na = character(),
+    col_types = list(X1 = col_factor(levels = c("NA", "NB", "NC", ""))),
+    na = character(),
+    skip_empty_rows = FALSE,
     equals = tibble::tibble(X1 = factor(x, levels = c("NA", "NB", "NC", "")))
   )
 })
@@ -140,19 +136,26 @@ test_that("encodings are respected", {
 })
 
 test_that("Results are correct with backslash escapes", {
-  obj <- vroom("A,T\nB,F\n", col_names = FALSE, col_types = list("f", "f"), escape_backslash = TRUE)
+  obj <- vroom(I("A,T\nB,F\n"), col_names = FALSE, col_types = list("f", "f"), escape_backslash = TRUE)
   exp <- tibble::tibble(X1 = factor(c("A", "B")), X2 = factor(c("T", "F"), levels = c("T", "F")))
   expect_equal(obj, exp)
 
-  obj2 <- vroom("A,T\nB,F\n", col_names = FALSE, col_types = list("f", "f"), escape_backslash = FALSE)
+  obj2 <- vroom(I("A,T\nB,F\n"), col_names = FALSE, col_types = list("f", "f"), escape_backslash = FALSE)
   expect_equal(obj2, exp)
 })
 
 
 test_that("subsetting works with both double and integer indexes", {
-  x <- vroom("X1\nfoo", delim = ",", col_types = "f")
+  x <- vroom(I("X1\nfoo"), delim = ",", col_types = "f")
   expect_equal(x$X1[1L], factor("foo"))
   expect_equal(x$X1[1], factor("foo"))
   expect_equal(x$X1[NA_integer_], factor(NA_character_, levels = "foo"))
   expect_equal(x$X1[NA_real_], factor(NA_character_, levels = "foo"))
+})
+
+test_that("results are correct even with quoted values", {
+  expect_equal(
+    vroom(I('day\n"Sun"\n"Sat"\n"Sat"'), altrep = FALSE, col_types = "f", delim = ",")$day,
+    factor(c("Sun", "Sat", "Sat"), levels = c("Sun", "Sat"))
+  )
 })

@@ -1,3 +1,24 @@
+is_ascii_compatible <- function(encoding) {
+  identical(iconv(list(charToRaw("\n")), from = "ASCII", to = encoding, toRaw = TRUE)[[1]], charToRaw("\n"))
+}
+
+reencode_path <- function(path, encoding) {
+  if (length(path) > 1) {
+    stop(sprintf("Reading files of encoding '%s' can only be done for single files at a time", encoding), call. = FALSE)
+  }
+
+  if (inherits(path[[1]], "connection")) {
+    in_con <- path[[1]]
+  } else {
+    in_con <- file(path[[1]])
+  }
+  out_file <- tempfile()
+  out_con <- file(out_file)
+  convert_connection(in_con, out_con, encoding, "UTF-8")
+  withr::defer(unlink(out_file), envir = parent.frame())
+  return(list(out_file))
+}
+
 # These functions adapted from https://github.com/tidyverse/readr/blob/192cb1ca5c445e359f153d2259391e6d324fd0a2/R/source.R
 standardise_path <- function(path) {
   if (is.raw(path)) {
@@ -15,8 +36,27 @@ standardise_path <- function(path) {
     return(list(path))
   }
 
-  if (is.character(path) && any(grepl("\n", path))) {
-    return(list(chr_to_file(path, envir = parent.frame())))
+  if (is.character(path)) {
+    if (inherits(path, "AsIs")) {
+      if (length(path) > 1) {
+        path <- paste(path, collapse = "\n")
+      }
+      return(list(chr_to_file(path, envir = parent.frame())))
+    }
+
+    if (any(grepl("\n", path))) {
+      lifecycle::deprecate_soft("1.5.0", "vroom(file = 'must use `I()` for literal data')",
+        details = glue::glue('
+
+          # Bad:
+          vroom("foo\\nbar\\n")
+
+          # Good:
+          vroom(I("foo\\nbar\\n"))
+        ')
+      )
+      return(list(chr_to_file(path, envir = parent.frame())))
+    }
   }
 
   as.list(path)

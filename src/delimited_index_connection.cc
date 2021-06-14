@@ -30,6 +30,7 @@ delimited_index_connection::delimited_index_connection(
     const size_t skip,
     size_t n_max,
     const char* comment,
+    const bool skip_empty_rows,
     const std::shared_ptr<vroom_errors> errors,
     const size_t chunk_size,
     const bool progress) {
@@ -73,14 +74,18 @@ delimited_index_connection::delimited_index_connection(
   buf[i].resize(sz + 1);
 
   if (sz == 0) {
+    std::fclose(out);
     if (should_close) {
       cpp11::package("base")["close"](in);
     }
     return;
   }
 
+  bool has_quoted_newlines = quote != '\0';
+
   // Parse header
-  size_t start = find_first_line(buf[i], skip_, comment_);
+  size_t start = find_first_line(
+      buf[i], skip_, comment_, skip_empty_rows, has_quoted_newlines);
 
   if (delim == nullptr) {
     delim_ = std::string(1, guess_delim(buf[i], start, 5, sz));
@@ -90,7 +95,8 @@ delimited_index_connection::delimited_index_connection(
 
   delim_len_ = delim_.length();
 
-  size_t first_nl = find_next_newline(buf[i], start);
+  size_t first_nl = find_next_newline(
+      buf[i], start, comment, skip_empty_rows, has_quoted_newlines);
 
   bool single_line = first_nl == buf[i].size() - 1;
 
@@ -116,9 +122,6 @@ delimited_index_connection::delimited_index_connection(
     }
   }
 
-  // Check for windows newlines
-  windows_newlines_ = first_nl > 0 && buf[i][first_nl - 1] == '\r';
-
   std::unique_ptr<RProgress::RProgress> pb = nullptr;
   if (progress_) {
     pb = std::unique_ptr<RProgress::RProgress>(
@@ -133,16 +136,16 @@ delimited_index_connection::delimited_index_connection(
   std::unique_ptr<multi_progress> empty_pb = nullptr;
 
   // Index the first row
-  idx_[0].push_back(start - 1);
-
   size_t cols = 0;
-  bool in_quote = false;
+  csv_state state = RECORD_START;
   size_t lines_read = index_region(
       buf[i],
       idx_[0],
       delim_.c_str(),
       quote,
-      in_quote,
+      comment_,
+      skip_empty_rows,
+      state,
       start,
       first_nl + 1,
       0,
@@ -171,7 +174,7 @@ delimited_index_connection::delimited_index_connection(
     if (parse_fut.valid()) {
       parse_fut.wait();
     }
-    n_max -= lines_read;
+    n_max = n_max > lines_read ? n_max - lines_read : 0;
 
     if (n_max > 0) {
       parse_fut = std::async([&, i, sz, first_nl, total_read] {
@@ -180,8 +183,10 @@ delimited_index_connection::delimited_index_connection(
             idx_[1],
             delim_.c_str(),
             quote,
-            in_quote,
-            first_nl,
+            comment_,
+            skip_empty_rows,
+            state,
+            first_nl + 1,
             sz,
             total_read,
             n_max,
@@ -216,7 +221,7 @@ delimited_index_connection::delimited_index_connection(
       buf[i][sz] = '\0';
     }
 
-    first_nl = 0;
+    first_nl = -1;
 
     // SPDLOG_DEBUG("first_nl_loc: {0} size: {1}", first_nl, sz);
   }
@@ -250,21 +255,17 @@ delimited_index_connection::delimited_index_connection(
       idx_[0].push_back(file_size);
       ++columns_;
     } else {
-      if (windows_newlines_) {
-        idx_[1].push_back(file_size + 1);
-      } else {
-        idx_[1].push_back(file_size);
-      }
+      idx_[1].push_back(file_size);
     }
   }
 
   size_t total_size = std::accumulate(
       idx_.begin(), idx_.end(), std::size_t{0}, [](size_t sum, const idx_t& v) {
-        sum += v.size() > 0 ? v.size() - 1 : 0;
+        sum += v.size() > 0 ? v.size() : 0;
         return sum;
       });
 
-  rows_ = columns_ > 0 ? total_size / columns_ : 0;
+  rows_ = columns_ > 0 ? total_size / (columns_ + 1) : 0;
 
   if (rows_ > 0 && has_header_) {
     --rows_;

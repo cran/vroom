@@ -44,6 +44,7 @@ public:
       const size_t skip,
       size_t n_max,
       const char* comment,
+      const bool skip_empty_rows,
       std::shared_ptr<vroom_errors> errors,
       const size_t num_threads,
       const bool progress,
@@ -63,29 +64,35 @@ public:
           is_first_(column == 0),
           is_last_(column == (idx_->columns_ - 1)),
           i_((idx_->has_header_ * idx_->columns_) + column_) {}
-    void next() { i_ += idx_->columns_; }
-    void prev() { i_ -= idx_->columns_; }
-    void advance(ptrdiff_t n) { i_ += idx_->columns_ * n; }
-    bool equal_to(const base_iterator& it) const {
+    void next() override { i_ += idx_->columns_; }
+    void prev() override { i_ -= idx_->columns_; }
+    void advance(ptrdiff_t n) override { i_ += idx_->columns_ * n; }
+    bool equal_to(const base_iterator& it) const override {
       return i_ == static_cast<const column_iterator*>(&it)->i_;
     }
-    ptrdiff_t distance_to(const base_iterator& it) const {
+    ptrdiff_t distance_to(const base_iterator& it) const override {
       return (static_cast<ptrdiff_t>(
                   static_cast<const column_iterator*>(&it)->i_) -
               static_cast<ptrdiff_t>(i_)) /
              ptrdiff_t(idx_->columns_);
     }
-    string value() const {
+    string value() const override {
       return idx_->get_trimmed_val(i_, is_first_, is_last_);
     }
-    column_iterator* clone() const { return new column_iterator(*this); }
-    string at(ptrdiff_t n) const {
+    column_iterator* clone() const override {
+      return new column_iterator(*this);
+    }
+    string at(ptrdiff_t n) const override {
       size_t i = ((n + idx_->has_header_) * idx_->columns_) + column_;
       return idx_->get_trimmed_val(i, is_first_, is_last_);
     }
-    std::string filename() const { return idx_->filename_; }
-    size_t index() const { return i_ / idx_->columns_; }
-    size_t position() const { return i_; }
+    std::string filename() const override { return idx_->filename_; }
+    size_t index() const override { return i_ / idx_->columns_; }
+    size_t position() const override {
+      size_t begin, end;
+      std::tie(begin, end) = idx_->get_cell(i_, is_first_);
+      return begin;
+    }
     virtual ~column_iterator() = default;
   };
 
@@ -99,60 +106,65 @@ public:
         : idx_(idx),
           row_(row),
           i_((row_ + idx_->has_header_) * idx_->columns_) {}
-    void next() { ++i_; }
-    void prev() { --i_; }
-    void advance(ptrdiff_t n) { i_ += n; }
-    bool equal_to(const base_iterator& it) const {
+    void next() override { ++i_; }
+    void prev() override { --i_; }
+    void advance(ptrdiff_t n) override { i_ += n; }
+    bool equal_to(const base_iterator& it) const override {
       return i_ == static_cast<const row_iterator*>(&it)->i_;
     }
-    ptrdiff_t distance_to(const base_iterator& it) const {
+    ptrdiff_t distance_to(const base_iterator& it) const override {
       return (
           static_cast<ptrdiff_t>(static_cast<const row_iterator*>(&it)->i_) -
           static_cast<ptrdiff_t>(i_));
     }
-    string value() const {
+    string value() const override {
       return idx_->get_trimmed_val(i_, i_ == 0, i_ == (idx_->columns_ - 1));
     }
-    row_iterator* clone() const { return new row_iterator(*this); }
-    string at(ptrdiff_t n) const {
+    row_iterator* clone() const override { return new row_iterator(*this); }
+    string at(ptrdiff_t n) const override {
       size_t i = (row_ + idx_->has_header_) * idx_->columns_ + n;
       return idx_->get_trimmed_val(i, i == 0, i == (idx_->columns_ - 1));
     }
-    std::string filename() const { return idx_->filename_; }
-    size_t index() const {
+    std::string filename() const override { return idx_->filename_; }
+    size_t index() const override {
       return i_ - (row_ + idx_->has_header_) * idx_->columns_;
     }
-    size_t position() const { return i_; }
+    size_t position() const override {
+      size_t begin, end;
+      std::tie(begin, end) = idx_->get_cell(i_, i_ == 0);
+      return begin;
+    }
     virtual ~row_iterator() = default;
   };
 
   delimited_index() : rows_(0), columns_(0){};
 
-  string get(size_t row, size_t col) const;
+  string get(size_t row, size_t col) const override;
 
-  size_t num_columns() const { return columns_; }
+  size_t num_columns() const override { return columns_; }
 
-  size_t num_rows() const { return rows_; }
+  size_t num_rows() const override { return rows_; }
 
   std::string filename() const { return filename_; }
 
-  std::string get_delim() const { return delim_; }
+  std::string get_delim() const override { return delim_; }
 
-  std::shared_ptr<vroom::index::column> get_column(size_t column) const {
+  std::shared_ptr<vroom::index::column>
+  get_column(size_t column) const override {
     auto begin = new column_iterator(shared_from_this(), column);
     auto end = new column_iterator(shared_from_this(), column);
     end->advance(num_rows());
     return std::make_shared<vroom::delimited_index::column>(begin, end, column);
   }
 
-  std::shared_ptr<vroom::index::row> get_row(size_t row) const {
+  std::shared_ptr<vroom::index::row> get_row(size_t row) const override {
     auto begin = new row_iterator(shared_from_this(), row);
     auto end = new row_iterator(shared_from_this(), row);
     end->advance(num_columns());
     return std::make_shared<vroom::delimited_index::row>(begin, end, row);
   }
 
-  std::shared_ptr<vroom::index::row> get_header() const {
+  std::shared_ptr<vroom::index::row> get_header() const override {
     auto begin = new row_iterator(shared_from_this(), -1);
     auto end = new row_iterator(shared_from_this(), -1);
     end->advance(num_columns());
@@ -169,7 +181,6 @@ public:
   bool trim_ws_;
   bool escape_double_;
   bool escape_backslash_;
-  bool windows_newlines_;
   size_t skip_;
   const char* comment_;
   size_t rows_;
@@ -187,7 +198,101 @@ public:
 
   const string get_trimmed_val(size_t i, bool is_first, bool is_last) const;
 
-  std::pair<const char*, const char*> get_cell(size_t i, bool is_first) const;
+  std::pair<size_t, size_t> get_cell(size_t i, bool is_first) const;
+
+  enum csv_state {
+    RECORD_START,
+    FIELD_START,
+    UNQUOTED_FIELD,
+    QUOTED_FIELD,
+    QUOTED_END
+  };
+
+  inline static csv_state quoted_state(csv_state in) {
+    switch (in) {
+    case RECORD_START:
+      return QUOTED_FIELD;
+    case FIELD_START:
+      return QUOTED_FIELD;
+    case UNQUOTED_FIELD:
+      return UNQUOTED_FIELD; // throw std::runtime_error("invalid 1");
+    case QUOTED_FIELD:
+      return QUOTED_END;
+    case QUOTED_END:
+      return QUOTED_FIELD;
+    }
+    throw std::runtime_error("should never happen");
+  }
+
+  inline static csv_state comma_state(csv_state in) {
+    switch (in) {
+    case RECORD_START:
+      return FIELD_START;
+    case FIELD_START:
+      return FIELD_START;
+    case UNQUOTED_FIELD:
+      return FIELD_START;
+    case QUOTED_FIELD:
+      return QUOTED_FIELD;
+    case QUOTED_END:
+      return FIELD_START;
+    }
+    throw std::runtime_error("should never happen");
+  }
+
+  inline static csv_state newline_state(csv_state in) {
+    switch (in) {
+    case RECORD_START:
+      return RECORD_START;
+    case FIELD_START:
+      return RECORD_START;
+    case UNQUOTED_FIELD:
+      return RECORD_START;
+    case QUOTED_FIELD:
+      return QUOTED_FIELD;
+    case QUOTED_END:
+      return RECORD_START;
+    }
+    throw std::runtime_error("should never happen");
+  }
+
+  inline static csv_state other_state(csv_state in) {
+    switch (in) {
+    case RECORD_START:
+      return UNQUOTED_FIELD;
+    case FIELD_START:
+      return UNQUOTED_FIELD;
+    case UNQUOTED_FIELD:
+      return UNQUOTED_FIELD;
+    case QUOTED_FIELD:
+      return QUOTED_FIELD;
+    case QUOTED_END:
+      return QUOTED_END;
+    }
+    throw std::runtime_error("should never happen");
+  }
+  void resolve_columns(
+      size_t pos,
+      size_t& cols,
+      size_t num_cols,
+      idx_t& destination,
+      std::shared_ptr<vroom_errors> errors) {
+    // Remove extra columns if there are too many
+    if (cols >= num_cols) {
+      errors->add_parse_error(pos, cols);
+      while (cols >= num_cols) {
+        destination.pop_back();
+        --cols;
+      }
+    } else if (cols < num_cols - 1) {
+      errors->add_parse_error(pos, cols);
+      // Add additional columns if there are too few
+      while (cols < num_cols - 1) {
+        destination.push_back(pos);
+        ++cols;
+      }
+    }
+  }
 
   /*
    * @param source the source to index
@@ -207,7 +312,9 @@ public:
       idx_t& destination,
       const char* delim,
       const char quote,
-      bool& in_quote,
+      const std::string& comment,
+      const bool skip_empty_rows,
+      csv_state& state,
       const size_t start,
       const size_t end,
       const size_t file_offset,
@@ -220,7 +327,14 @@ public:
       const size_t update_size) {
 
     // If there are no quotes quote will be '\0', so will just work
-    std::array<char, 5> query = {delim[0], '\n', '\\', quote, '\0'};
+    std::array<char, 6> query = {delim[0], '\n', '\\', '\0', '\0', '\0'};
+    auto query_i = 3;
+    if (quote != '\0') {
+      query[query_i++] = quote;
+    }
+    if (!comment.empty()) {
+      query[query_i] = comment[0];
+    }
 
     auto last_tick = start;
 
@@ -229,18 +343,53 @@ public:
     // The actual parsing is here
     size_t pos = start;
     size_t lines_read = 0;
-    while (pos < end) {
-      size_t buf_offset = strcspn(buf + pos, query.data());
-      pos = pos + buf_offset;
+
+    while (pos < end && lines_read < n_max) {
       auto c = buf[pos];
 
-      if (!in_quote && strncmp(delim, buf + pos, delim_len_) == 0) {
+      if (escape_backslash_ && c == '\\') {
+        ++pos;
+        if (state == RECORD_START) {
+          destination.push_back(pos + file_offset);
+          state = FIELD_START;
+        }
+        ++pos;
+        continue;
+      }
+
+      else if (
+          state != QUOTED_FIELD && is_comment(buf + pos, buf + end, comment)) {
+        if (state != RECORD_START) {
+          destination.push_back(pos + file_offset);
+          resolve_columns(
+              pos + file_offset, cols, num_cols, destination, errors);
+        }
+        cols = 0;
+        pos = skip_rest_of_line(source, pos);
+        ++pos;
+        state = newline_state(state);
+        continue;
+      }
+
+      if (state == RECORD_START) {
+        if (is_empty_line(buf + pos, buf + end, skip_empty_rows)) {
+          pos = skip_rest_of_line(source, pos);
+          ++pos;
+          continue;
+        }
+        // REprintf("RS: %i\n", pos);
+        destination.push_back(pos + file_offset);
+      }
+
+      if (state != QUOTED_FIELD && strncmp(delim, buf + pos, delim_len_) == 0) {
+        state = comma_state(state);
         destination.push_back(pos + file_offset);
         ++cols;
       }
 
       else if (c == '\n') {
-        if (in_quote) { // This will work as long as num_threads = 1
+        if (state ==
+            QUOTED_FIELD) { // This will work as long as num_threads = 1
           if (num_threads != 1) {
             if (progress_ && pb) {
               pb->finish();
@@ -250,35 +399,21 @@ public:
           ++pos;
           continue;
         }
-
-        // Ensure columns are consistent
         if (num_cols > 0 && pos > start) {
-          // Remove extra columns if there are too many
-          if (cols >= num_cols) {
-            errors->add_parse_error(pos + file_offset, cols);
-            while (cols >= num_cols) {
-              destination.pop_back();
-              --cols;
-            }
-          } else if (cols < num_cols - 1) {
-            errors->add_parse_error(pos + file_offset, cols);
-            // Add additional columns if there are too few
-            while (cols < num_cols - 1) {
-              destination.push_back(pos + file_offset - windows_newlines_);
-              ++cols;
-            }
-          }
+          resolve_columns(
+              pos + file_offset, cols, num_cols, destination, errors);
         }
 
+        state = newline_state(state);
         cols = 0;
         destination.push_back(pos + file_offset);
+        ++lines_read;
         if (lines_read >= n_max) {
           if (progress_ && pb) {
             pb->finish();
           }
           return lines_read;
         }
-        ++lines_read;
         if (progress_ && pb) {
           size_t tick_size = pos - last_tick;
           if (tick_size > update_size) {
@@ -288,31 +423,34 @@ public:
         }
       }
 
-      else if (escape_backslash_ && c == '\\') {
-        ++pos;
+      else if (c == quote) {
+        state = quoted_state(state);
       }
 
-      else if (c == quote) {
-        /* not already in a quote */
-        if (!in_quote &&
-            /* right after the start of file or line */
-            (pos == start || buf[pos - 1] == '\n' ||
-             /* or after a delimiter */
-             strncmp(delim, buf + (pos - delim_len_), delim_len_) == 0)) {
-          in_quote = !in_quote;
-        } else if (
-            /* already in a quote */
-            in_quote &&
-            /* right at the end of the file or line */
-            (pos == end - 1 ||
-             ((!windows_newlines_ && (pos + 1 < end && buf[pos + 1] == '\n')) ||
-              (windows_newlines_ && (pos + 2 < end && buf[pos + 2] == '\n'))) ||
-             /* or before a delimiter */
-             (pos + delim_len_ + 1 < end &&
-              strncmp(delim, buf + (pos + 1), delim_len_) == 0))) {
-          in_quote = !in_quote;
+      else {
+        state = other_state(state);
+        ++pos;
+        size_t buf_offset;
+        if (pos < end) {
+          buf_offset = strcspn(buf + pos, query.data());
+          pos = pos + buf_offset;
         }
+        continue;
       }
+
+      // REprintf(
+      //"%i\t'%c'\t%c\n",
+      // pos,
+      // c,
+      // state == RECORD_START
+      //? 'R'
+      //: state == FIELD_START
+      //? 'F'
+      //: state == UNQUOTED_FIELD
+      //? 'U'
+      //: state == QUOTED_FIELD
+      //? 'Q'
+      //: state == QUOTED_END ? 'E' : 'X');
 
       ++pos;
     }

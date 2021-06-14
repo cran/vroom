@@ -227,7 +227,6 @@ format.col_spec <- function(x, n = Inf, condense = NULL, colour = crayon::has_co
     return(paste0(fun_type, "()\n"))
   }
 
-
   out <- paste0(fun_type, "(\n  ", paste(collapse = ",\n  ", cols_args))
 
   if (length(x$cols) > n) {
@@ -331,6 +330,8 @@ vroom_enquo <- function(x) {
 }
 
 vroom_select <- function(x, col_select, id) {
+  spec <- attr(x, "spec")
+
   # Drop any NULL columns
   is_null <- vapply(x, is.null, logical(1))
   x[is_null] <- NULL
@@ -346,6 +347,7 @@ vroom_select <- function(x, col_select, id) {
     x <- x[vars]
     names(x) <- names(vars)
   }
+  attr(x, "spec") <- spec
   x
 }
 
@@ -353,6 +355,8 @@ col_types_standardise <- function(spec, col_names, col_select, name_repair) {
   if (length(col_names) == 0) {
     return(spec)
   }
+  col_names <- vctrs::vec_as_names(col_names, repair = name_repair)
+
   type_names <- names(spec$cols)
 
   if (length(spec$cols) == 0) {
@@ -373,8 +377,8 @@ col_types_standardise <- function(spec, col_names, col_select, name_repair) {
 
     bad_types <- !(type_names %in% col_names)
     if (any(bad_types)) {
-      warning("The following named parsers don't match the column names: ",
-        paste0(type_names[bad_types], collapse = ", "), call. = FALSE)
+      rlang::warn(paste0("The following named parsers don't match the column names: ",
+        paste0(type_names[bad_types], collapse = ", ")), class = "vroom_mismatched_column_name")
       spec$cols <- spec$cols[!bad_types]
       type_names <- type_names[!bad_types]
     }
@@ -388,8 +392,6 @@ col_types_standardise <- function(spec, col_names, col_select, name_repair) {
 
     spec$cols <- spec$cols[col_names]
   }
-
-  names(spec$cols) <- vctrs::vec_as_names(names(spec$cols), repair = name_repair)
 
   if (inherits(col_select, "quosures") || !rlang::quo_is_null(col_select)) {
     if (inherits(col_select, "quosures")) {
@@ -433,54 +435,121 @@ guess_parser <- function(x, na = c("", "NA"), locale = default_locale(), guess_i
   guess_type_(x, na = na, locale = locale, guess_integer = guess_integer)
 }
 
+show_dims <- function(x) {
+  cli_block(class = "vroom_dim_message", {
+    cli::cli_text("
+      {.strong Rows: }{.val {NROW(x)}}
+      {.strong Columns: }{.val {NCOL(x)}}
+      ")
+  })
+}
+
+collector_value <- function(x, ...) {
+  UseMethod("collector_value")
+}
+
+#' @export
+collector_value.collector_character <- function(x, ...) { character() }
+
+#' @export
+collector_value.collector_double <- function(x, ...) { numeric() }
+
+#' @export
+collector_value.collector_integer <- function(x, ...) { integer() }
+
+#' @export
+collector_value.collector_numeric <- function(x, ...) { numeric() }
+
+#' @export
+collector_value.collector_logical <- function(x, ...) { logical() }
+
+#' @export
+collector_value.collector_factor <- function(x, ...) { factor() }
+
+#' @export
+collector_value.collector_datetime <- function(x, ...) { as.POSIXct(double()) }
+
+#' @export
+collector_value.collector_date <- function(x, ...) { as.Date(double()) }
+
+#' @export
+collector_value.collector_time <- function(x, ...) { hms::hms() }
+
+#' @export
+collector_value.collector_guess <- function(x, ...) { character() }
+
 #' @importFrom crayon silver
 #' @importFrom glue double_quote
-show_spec_summary <- function(x, width = getOption("width"), locale = default_locale()) {
-  spec <- spec(x)
-  if (length(spec$cols) == 0) {
-    return(invisible(x))
+#' @export
+summary.col_spec <- function(object, width = getOption("width"), locale = default_locale(), ...) {
+  if (length(object$cols) == 0) {
+    return(invisible(object))
   }
 
   type_map <- c("collector_character" = "chr", "collector_double" = "dbl",
     "collector_integer" = "int", "collector_num" = "num", "collector_logical" = "lgl",
     "collector_factor" = "fct", "collector_datetime" = "dttm", "collector_date" = "date",
-    "collector_time" = "time")
+    "collector_time" = "time",
+    "collector_guess" = "???")
 
-  col_types <- vapply(spec$cols, function(x) class(x)[[1]], character(1))
+  col_types <- vapply(object$cols, function(x) class(x)[[1]], character(1))
   col_types <- droplevels(factor(type_map[col_types], levels = unname(type_map)))
   type_counts <- table(col_types)
 
   n <- length(type_counts)
 
   types <- format(vapply(names(type_counts), color_type, character(1)))
-  counts <- format(type_counts)
-  col_width <- min(width - crayon::col_nchar(types) + nchar(counts) + 4)
-  columns <- vapply(split(names(spec$cols), col_types), function(x) glue::glue_collapse(x, ", ", width = col_width), character(1))
+  counts <- format(glue::glue("({type_counts})"), justify = "right")
+  col_width <- min(width - (crayon::col_nchar(types) + nchar(counts) + 4))
+  columns <- vapply(split(names(object$cols), col_types), function(x) glue::glue_collapse(x, ", ", width = col_width), character(1))
 
   fmt_num <- function(x) {
     prettyNum(x, big.mark = locale$grouping_mark, decimal.mark = locale$decimal_mark)
   }
 
-  delim <- spec$delim %||% ""
+  delim <- object$delim %||% ""
 
-  message(
-    glue::glue(
-      .transformer = collapse_transformer(sep = "\n"),
-      entries = glue::glue("{format(types)} [{format(type_counts)}]: {columns}"),
+  txt <- glue::glue(
+    .transformer = collapse_transformer(sep = "\n"),
+    entries = glue::glue("{format(types)} {counts}: {columns}"),
 
-      '
-      {bold("Rows:")} {fmt_num(NROW(x))}
-      {bold("Columns:")} {fmt_num(NCOL(x))}
-      {if (nzchar(delim)) paste(bold("Delimiter:"), double_quote(delim)) else ""}
-      {entries*}
+    '
+    {if (nzchar(delim)) paste(bold("Delimiter:"), double_quote(delim)) else ""}
+    {entries*}
 
-      {silver("Use `spec()` to retrieve the guessed column specification")}
-      {silver("Pass a specification to the `col_types` argument to quiet this message")}
-      '
-    )
+
+    ')
+  cli_block(class = "vroom_spec_message", {
+    cli::cli_h1("Column specification")
+    cli::cli_verbatim(txt)
+  })
+
+  invisible(object)
+}
+
+show_col_types <- function(x, locale) {
+  show_dims(x)
+  summary(spec(x), locale = locale)
+  cli_block(class = "vroom_spec_message", {
+    cli::cli_verbatim("\n\n")
+    cli::cli_alert_info("Use {.fn spec} to retrieve the full column specification for this data.")
+    cli::cli_alert_info("Specify the column types or set {.arg show_col_types = FALSE} to quiet this message.")
+  })
+}
+
+cli_block <- function(expr, class = NULL, type = rlang::inform) {
+  msg <- ""
+  withCallingHandlers(
+    expr,
+    message = function(x) {
+      msg <<- paste0(msg, x$message)
+      invokeRestart("muffleMessage")
+    }
   )
+  msg <- sub("^\n", "", msg)
+  msg <- sub("\n+$", "", msg)
 
-  invisible(x)
+  type(msg, class = class)
 }
 
 color_type <- function(type) {
@@ -493,7 +562,8 @@ color_type <- function(type) {
     num = crayon::green(type),
     date = ,
     dttm = ,
-    time = crayon::blue(type)
+    time = crayon::blue(type),
+    "???" = type
   )
 }
 

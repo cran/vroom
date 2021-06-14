@@ -4,12 +4,19 @@
 \alias{vroom_write_lines}
 \title{Write lines to a file}
 \usage{
-vroom_write_lines(x, path, eol = "\\n", na = "NA", append = FALSE)
+vroom_write_lines(
+  x,
+  file,
+  eol = "\\n",
+  na = "NA",
+  append = FALSE,
+  num_threads = vroom_threads()
+)
 }
 \arguments{
 \item{x}{A data frame or tibble to write to disk.}
 
-\item{path}{\Sexpr[results=rd, stage=render]{lifecycle::badge("deprecated")}}
+\item{file}{File or connection to write to.}
 
 \item{eol}{The end of line character to use. Most commonly either \code{"\n"} for
 Unix style newlines, or \code{"\r\n"} for Windows style newlines.}
@@ -19,6 +26,10 @@ Unix style newlines, or \code{"\r\n"} for Windows style newlines.}
 \item{append}{If \code{FALSE}, will overwrite existing file. If \code{TRUE},
 will append to existing file. In both cases, if the file does not exist a new
 file is created.}
+
+\item{num_threads}{Number of threads to use when reading and materializing
+vectors. If your data contains newlines within fields the parser will
+automatically be forced to use a single thread only.}
 }
 \description{
 Write lines to a file

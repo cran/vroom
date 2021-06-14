@@ -8,6 +8,8 @@
 #include <array>
 #include <fstream>
 #include <future> // std::async, std::future
+#include <utility>
+
 
 #ifdef VROOM_LOG
 #include "spdlog/sinks/basic_file_sink.h" // support for basic file logging
@@ -23,12 +25,13 @@ fixed_width_index_connection::fixed_width_index_connection(
     bool trim_ws,
     const size_t skip,
     const char* comment,
+    const bool skip_empty_rows,
     const size_t n_max,
     const bool progress,
     const size_t chunk_size) {
 
-  col_starts_ = col_starts;
-  col_ends_ = col_ends;
+  col_starts_ = std::move(col_starts);
+  col_ends_ = std::move(col_ends);
   trim_ws_ = trim_ws;
 
   filename_ =
@@ -55,10 +58,12 @@ fixed_width_index_connection::fixed_width_index_connection(
   buf[i][sz] = '\0';
 
   // Parse header
-  size_t start = find_first_line(buf[i], skip, comment);
+  size_t start = find_first_line(
+      buf[i], skip, comment, skip_empty_rows, /* embedded_nl */ false);
 
   // Check for windows newlines
-  size_t first_nl = find_next_newline(buf[i], start, false);
+  size_t first_nl =
+      find_next_newline(buf[i], start, comment, skip_empty_rows, false);
   windows_newlines_ = first_nl > 0 && buf[i][first_nl - 1] == '\r';
 
   std::unique_ptr<RProgress::RProgress> pb = nullptr;
@@ -82,7 +87,15 @@ fixed_width_index_connection::fixed_width_index_connection(
     }
     parse_fut = std::async([&, i, start, total_read, sz] {
       lines_read = index_region(
-          buf[i], newlines_, start, sz, total_read, n_max, empty_pb);
+          buf[i],
+          newlines_,
+          start,
+          sz,
+          total_read,
+          comment,
+          skip_empty_rows,
+          n_max,
+          empty_pb);
     });
 
     if (write_fut.valid()) {

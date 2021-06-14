@@ -1,4 +1,9 @@
-test_vroom <- function(content, delim = "\n", col_types = list(), ..., equals) {
+test_vroom <- function(content, delim = ",", col_types = list(), ..., equals) {
+  if(any(grepl("\n", content))) {
+    content <- I(content)
+  }
+  suppressWarnings({
+
   # with altrep
   withr::with_envvar(c("VROOM_USE_ALTREP_CHR" = "true", "VROOM_USE_ALTREP_NUMERICS" = "true"), {
     expect_equal(
@@ -18,8 +23,8 @@ test_vroom <- function(content, delim = "\n", col_types = list(), ..., equals) {
   if (!file.exists(content)) {
     tf <- tempfile()
     on.exit(unlink(tf))
-    out_con <- file(tf, "wb")
-    writeLines(content, out_con, sep = "")
+    out_con <- file(tf, "wb", encoding = "UTF-8")
+    writeBin(charToRaw(content), out_con)
     close(out_con)
 
     con <- file(tf, "rb")
@@ -35,33 +40,34 @@ test_vroom <- function(content, delim = "\n", col_types = list(), ..., equals) {
     force_materialization(res[[i]])
   }
   expect_equal(res, equals)
+  })
 
   invisible(res)
 }
 
 test_parse_number <- function(x, expected, ...) {
-  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\n",
+  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\t",
     col_names = FALSE, col_types = "n", ...,
     equals = tibble::tibble(X1 = expected)
   )
 }
 
 test_parse_datetime <- function(x, expected, format = "", ...) {
-  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\n",
+  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\t",
     col_names = FALSE, col_types = cols(X1 = col_datetime(format = format)), ...,
     equals = tibble::tibble(X1 = expected)
   )
 }
 
 test_parse_date <- function(x, expected, format = "", ...) {
-  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\n",
+  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\t",
     col_names = FALSE, col_types = cols(X1 = col_date(format = format)), ...,
     equals = tibble::tibble(X1 = expected)
   )
 }
 
 test_parse_time <- function(x, expected, format = "", ...) {
-  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\n",
+  test_vroom(paste0(paste0(x, collapse = "\n"), "\n"), delim = "\t",
     col_names = FALSE, col_types = cols(X1 = col_time(format = format)), ...,
     equals = tibble::tibble(X1 = expected)
   )
@@ -69,4 +75,8 @@ test_parse_time <- function(x, expected, format = "", ...) {
 
 expect_error_free <- function(object, ...) {
   expect_error(object, regexp = NA)
+}
+
+on_github_actions <- function() {
+  identical(Sys.getenv("GITHUB_ACTIONS"), "true")
 }

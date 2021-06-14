@@ -43,9 +43,9 @@ test_that("read_delim/csv/tsv and write_delim round trip special chars", {
   x <- stats::setNames(list("a", '"', ",", "\n","at\t"), paste0("V", seq_len(5)))
 
   output <- tibble::as_tibble(x)
-  output_space <- vroom(vroom_format(output, delim = " "), trim_ws = FALSE, progress = FALSE, col_types = list())
-  output_csv <- vroom(vroom_format(output, delim = ","), trim_ws = FALSE, progress = FALSE, col_types = list())
-  output_tsv <- vroom(vroom_format(output, delim = "\t"), trim_ws = FALSE, progress = FALSE, col_types = list())
+  output_space <- vroom(I(vroom_format(output, delim = " ")), trim_ws = FALSE, progress = FALSE, col_types = list())
+  output_csv <- vroom(I(vroom_format(output, delim = ",")), trim_ws = FALSE, progress = FALSE, col_types = list())
+  output_tsv <- vroom(I(vroom_format(output, delim = "\t")), trim_ws = FALSE, progress = FALSE, col_types = list())
   expect_equal(output_space, output)
   expect_equal(output_csv, output)
   expect_equal(output_tsv, output)
@@ -68,7 +68,7 @@ test_that("logical values give long names", {
 
 test_that("roundtrip preserved floating point numbers", {
   input <- data.frame(x = runif(100))
-  output <- vroom(vroom_format(input, delim = " "), delim = " ", col_types = list())
+  output <- vroom(I(vroom_format(input, delim = " ")), delim = " ", col_types = list())
 
   expect_equal(input$x, output$x)
 })
@@ -79,7 +79,7 @@ test_that("roundtrip preserves dates and datetimes", {
   attr(y, "tzone") <- "UTC"
 
   input <- data.frame(x, y)
-  output <- vroom(vroom_format(input, delim = " "), delim = " ", col_types = list())
+  output <- vroom(I(vroom_format(input, delim = " ")), delim = " ", col_types = list())
 
   expect_equal(output$x, x)
   expect_equal(output$y, y)
@@ -219,4 +219,28 @@ test_that("vroom_write() works with an empty delimiter", {
 
   vroom::vroom_write(df, f, delim = "")
   expect_equal(vroom_lines(f), c("xy", "foobar"))
+})
+
+test_that("vroom_write_lines() works with empty", {
+  f <- tempfile(, fileext = ".txt")
+  on.exit(unlink(f))
+
+  vroom::vroom_write_lines(character(), f)
+  expect_equal(vroom_lines(f), character())
+})
+
+test_that("vroom_write_lines() works with normal input", {
+  f <- tempfile(, fileext = ".txt")
+  on.exit(unlink(f))
+
+  vroom::vroom_write_lines(c("foo", "bar"), f)
+  expect_equal(vroom_lines(f), c("foo", "bar"))
+})
+
+test_that("vroom_write_lines() does not escape or quote lines", {
+  f <- tempfile(, fileext = ".txt")
+  on.exit(unlink(f))
+
+  vroom::vroom_write_lines(c('"foo"', "bar"), f)
+  expect_equal(vroom_lines(f), c('"foo"', "bar"))
 })
