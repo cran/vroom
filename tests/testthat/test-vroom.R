@@ -177,6 +177,7 @@ test_that("vroom handles UTF byte order marks", {
 })
 
 test_that("vroom handles vectors shorter than the UTF byte order marks", {
+  skip_on_os("solaris")
 
   expect_equal(
     charToRaw(vroom(as.raw(c(0xef, 0xbb, 0x0A)), delim = "\n", col_names = FALSE, col_types = list())[[1]]),
@@ -337,7 +338,7 @@ test_that("vroom uses the number of rows when guess_max = Inf", {
   vroom_write(df, tf, delim = "\t")
 
   # The type should be guessed wrong, because the character comes at the end
-  res <- expect_warning(vroom(tf, delim = "\t", col_types = list(), altrep = FALSE))
+  expect_warning(res <- vroom(tf, delim = "\t", col_types = list(), altrep = FALSE))
   expect_type(res[["x"]], "double")
   expect_true(is.na(res[["x"]][[NROW(res)]]))
 
