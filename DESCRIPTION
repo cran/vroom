@@ -1,6 +1,6 @@
 Package: vroom
 Title: Read and Write Rectangular Text Data Quickly
-Version: 1.5.1
+Version: 1.5.2
 Authors@R: 
     c(person(given = "Jim",
              family = "Hester",
@@ -37,9 +37,10 @@ Depends: R (>= 3.1)
 Imports: bit64, crayon, cli, glue, hms, lifecycle, methods, rlang (>=
         0.4.2), stats, tibble (>= 2.0.0), tzdb (>= 0.1.1), vctrs (>=
         0.2.0), tidyselect, withr
-Suggests: bench (>= 1.1.0), covr, curl, dplyr, forcats, fs, ggplot2,
-        knitr, patchwork, prettyunits, purrr, rmarkdown, rstudioapi,
-        scales, spelling, testthat (>= 2.1.0), tidyr, waldo, xml2
+Suggests: archive, bench (>= 1.1.0), covr, curl, dplyr, forcats, fs,
+        ggplot2, knitr, patchwork, prettyunits, purrr, rmarkdown,
+        rstudioapi, scales, spelling, testthat (>= 2.1.0), tidyr,
+        waldo, xml2
 LinkingTo: progress (>= 1.2.1), cpp11 (>= 0.2.0), tzdb (>= 0.1.1)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
@@ -51,7 +52,7 @@ Language: en-US
 RoxygenNote: 7.1.1
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2021-06-22 18:20:37 UTC; jhester
+Packaged: 2021-07-08 16:50:09 UTC; jhester
 Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   Hadley Wickham [aut] (<https://orcid.org/0000-0003-4757-117X>),
   https://github.com/mandreyel/ [cph] (mio library),
@@ -60,4 +61,4 @@ Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   RStudio [cph, fnd]
 Maintainer: Jim Hester <jim.hester@rstudio.com>
 Repository: CRAN
-Date/Publication: 2021-06-22 19:00:02 UTC
+Date/Publication: 2021-07-08 17:30:02 UTC

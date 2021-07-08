@@ -1,3 +1,22 @@
+# vroom 1.5.2
+
+* `vroom()` now supports inputs with unnamed column types that are less than the number of columns (#296)
+
+* `vroom()` now outputs the correct column names even in the presence of skipped columns (#293, [tidyverse/readr#1215](https://github.com/tidyverse/readr/issues/1215))
+
+* `vroom_fwf(n_max=)` now works as intended when the input is a connection.
+
+* `vroom()` and `vroom_write()` now automatically detect the compression format regardless of the file extension for bzip2, xzip, gzip and zip files (#348)
+
+* `vroom()` and `vroom_write()` now automatically support many more archive formats thanks to the archive package.
+  These include new support for writing zip files, reading and writing 7zip, tar and ISO files.
+
+* `vroom(num_threads = 1)` will now not spawn any threads.
+  This can be used on as a workaround on systems without full thread support.
+
+* Threads are now automatically disabled on non-macOS systems compiling against clang's libc++.
+  Most systems non-macOS systems use the more common gcc libstdc++, so this should not effect most users.
+
 # vroom 1.5.1
 
 * Parsers now treat NA values as NA even if they are valid values for the types (#342)
