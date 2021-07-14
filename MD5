@@ -1,9 +1,9 @@
-563a7fdcf7636c7f0432de5487ee0764 *DESCRIPTION
+18ec31dcaea705b03056f4aa841e7dba *DESCRIPTION
 f336abdde07864ff91d6e5291bcafa04 *LICENSE
 9de2da89aed2f6ef2f7316961e66675c *NAMESPACE
-ba3c8a0d72b75be88426df9c66940839 *NEWS.md
+706fbd08843565226b89ad90d42bfe0a *NEWS.md
 d7578264258a633b154d1ea963e14f13 *R/altrep.R
-eabf4ad69f6370d6e165ce2703ff89a5 *R/col_types.R
+a2d048204712dc3b7568168f61dc4ea6 *R/col_types.R
 7e38e98c5c023b59dcfa340dd18b74a9 *R/collector.R
 aaee65464548aac61c954dfde68169a2 *R/cpp11.R
 3b8ab5ce8838b115b13b028f137d2bc1 *R/date.R
@@ -22,8 +22,8 @@ ad55db8281ebcc9432b9f832c543aa3b *R/vroom_lines.R
 041fac39161d53eec7ccb51b5c2dd2ff *R/vroom_write.R
 2b72228974b8947a01b68eada8f15ede *R/zzz.R
 f8e20627d44e0916fb924c7cd71cbecf *README.md
-c620d269ec2388dae079c7307da08c2f *build/vignette.rds
-71a4b57339ddd5f1e159b09330f1704e *build/vroom.pdf
+8d2ad329e4f4f10bcbd169e90e188ab5 *build/vignette.rds
+8795fb08edc11f543c8e2151b08a23cb *build/vroom.pdf
 f66fad5f29df5d746eba05092f5db402 *inst/COPYRIGHTS
 c95cf75a0a39b7b1ad0366d86e9afbf0 *inst/WORDLIST
 079547f9bdda65602ec9546b56591cd9 *inst/bench/GNUmakefile
@@ -109,7 +109,7 @@ b5a3868cff110ed5ede33fc30e2158b6 *inst/doc/benchmarks.Rmd
 495b843323f2145f5b297c706600ae3a *inst/doc/benchmarks.html
 5c56f6ba9a79d49817ceda83356710f1 *inst/doc/vroom.R
 73fdbf92a40c6d8d87eef6e52ee2376e *inst/doc/vroom.Rmd
-371c6a9e21f00f7d646161e9ddcd7764 *inst/doc/vroom.html
+38ff3ce4c4ac0b21cc96e2968dba1880 *inst/doc/vroom.html
 891bca40aeba031848809c3e587b20d7 *inst/extdata/fwf-sample.txt
 c25b678e1bf7c33f1438853930348b5f *inst/extdata/mtcars-4.csv
 2a4acab046ab5735b2589365a29888fa *inst/extdata/mtcars-6.csv
@@ -163,11 +163,11 @@ e53e95e6227bb57203b78aa543db284f *src/LocaleInfo.h
 0b626669caeda5aa0aae489bf5a83389 *src/Makevars
 2f48b5329dc1e2326238428ad6859b89 *src/altrep.cc
 981800e144b27a60da8293a147457b09 *src/altrep.h
-b31e32c853f04005b170d947bde0cf4a *src/collectors.h
+d41d12eb5a74226e6613254162fc85c4 *src/collectors.h
 19639be826dbd3f87d988965a1b6dfcd *src/columns.h
 69cf09d6f4e60bb39691070d4516b06f *src/connection.h
 7e952b422fe22190307742683bbc6658 *src/cpp11.cpp
-15fe3caefc9eb641007cd70a06d19d7b *src/delimited_index.cc
+6be5d9979c7ea4d7b3794fa38c2ce0a7 *src/delimited_index.cc
 751c324f11c931810b5b24b5766074ce *src/delimited_index.h
 701798c5f1951b5dd2f4683679264438 *src/delimited_index_connection.cc
 f952f303a08a5f67efbcd34cb7beaee1 *src/delimited_index_connection.h
@@ -241,7 +241,7 @@ c22dc4abbe3f38c60e008ec0e92509fe *tests/testthat/helper.R
 ea427f49d3ef99f68cc3902c7d317a87 *tests/testthat/raw.csv
 952c30f579ed3438656f98f3d39f4af1 *tests/testthat/test-big-int.R
 499edc14e0e51ca0e4fe827e1b237df1 *tests/testthat/test-chr.R
-b55fc86b7405a989425942014c5dfa7d *tests/testthat/test-col_types.R
+089c69a7a6634ff96ff92f033210a258 *tests/testthat/test-col_types.R
 837e8ff294790892a522f89163667e51 *tests/testthat/test-connection.R
 42b6cd125bd3561ad204daf401e2d2f1 *tests/testthat/test-datetime.R
 f25e4c71eab57d2fc9818f3e32f8743a *tests/testthat/test-dbl.R
@@ -254,7 +254,7 @@ fac6d3f989eda914f12e380f494baa21 *tests/testthat/test-num.R
 0e44c9d3244852c1c4593f22498170b0 *tests/testthat/test-path.R
 912ea24b3b730cc4409f122e6023e0e9 *tests/testthat/test-problems.R
 e49c556cf8cad140bcf3efd634af9d80 *tests/testthat/test-select.R
-53459f659de6f4a0558e99d001b40ddf *tests/testthat/test-vroom.R
+4aaafcb5de42a7e9176417a0729ee64c *tests/testthat/test-vroom.R
 c006fb1b58e0aefcde60d295616b8b8b *tests/testthat/test-vroom_fwf.R
 d0d2e9b9819c731774723a38503a1fde *tests/testthat/test-vroom_lines.R
 2b4f71774d45c2ec7cd4dd776787a399 *tests/testthat/test-vroom_write.R
