@@ -1,6 +1,6 @@
 Package: vroom
 Title: Read and Write Rectangular Text Data Quickly
-Version: 1.5.3
+Version: 1.5.4
 Authors@R: 
     c(person(given = "Jim",
              family = "Hester",
@@ -52,7 +52,7 @@ Language: en-US
 RoxygenNote: 7.1.1
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2021-07-13 19:38:47 UTC; jhester
+Packaged: 2021-08-05 19:15:56 UTC; jhester
 Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   Hadley Wickham [aut] (<https://orcid.org/0000-0003-4757-117X>),
   https://github.com/mandreyel/ [cph] (mio library),
@@ -61,4 +61,4 @@ Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   RStudio [cph, fnd]
 Maintainer: Jim Hester <jim.hester@rstudio.com>
 Repository: CRAN
-Date/Publication: 2021-07-14 04:30:02 UTC
+Date/Publication: 2021-08-05 20:00:02 UTC
