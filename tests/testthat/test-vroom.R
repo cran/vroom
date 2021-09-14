@@ -797,3 +797,26 @@ am'")
   test_vroom(text, col_names = FALSE, quote = "'", delim = ",",
     equals = tibble::tibble(X1 = c(1, 2), X2 = c("I\nam\nsam", "sam\nI\nam")))
 })
+
+test_that("vroom works when grouping_mark is empty (#1241)", {
+  x <- vroom(I("foo\nbar"), locale = locale(grouping_mark = ""), delim = ",", col_names = FALSE, col_types = "c")
+  expect_equal(x[[1]], c("foo", "bar"))
+})
+
+test_that("vroom works if given col_names and col_types less than the number of columns (https://github.com/tidyverse/readr/issues/1271)", {
+  x <- vroom(
+    I("a\tb\n"),
+    delim = "\t",
+    col_names = c("x"),
+    col_types = list("x" = "c")
+  )
+
+  expect_equal(x[["x"]], "a")
+  expect_equal(x[["X2"]], "b")
+})
+
+test_that("vroom works with CR line endings only", {
+  test_vroom(I("a,b\r1,2\r3,4\r"), delim = ",",
+    equals = tibble::tibble(a = c(1, 3), b = c(2, 4))
+  )
+})
