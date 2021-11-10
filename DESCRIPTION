@@ -1,6 +1,6 @@
 Package: vroom
 Title: Read and Write Rectangular Text Data Quickly
-Version: 1.5.5
+Version: 1.5.6
 Authors@R: 
     c(person(given = "Jim",
              family = "Hester",
@@ -40,7 +40,7 @@ Imports: bit64, crayon, cli, glue, hms, lifecycle, methods, rlang (>=
 Suggests: archive, bench (>= 1.1.0), covr, curl, dplyr, forcats, fs,
         ggplot2, knitr, patchwork, prettyunits, purrr, rmarkdown,
         rstudioapi, scales, spelling, testthat (>= 2.1.0), tidyr,
-        waldo, xml2
+        utils, waldo, xml2
 LinkingTo: progress (>= 1.2.1), cpp11 (>= 0.2.0), tzdb (>= 0.1.1)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
@@ -49,10 +49,10 @@ Config/Needs/website: nycflights13
 Copyright: file COPYRIGHTS
 Encoding: UTF-8
 Language: en-US
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2021-09-14 13:55:59 UTC; jhester
+Packaged: 2021-11-10 15:34:06 UTC; jhester
 Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   Hadley Wickham [aut] (<https://orcid.org/0000-0003-4757-117X>),
   https://github.com/mandreyel/ [cph] (mio library),
@@ -61,4 +61,4 @@ Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
   RStudio [cph, fnd]
 Maintainer: Jim Hester <jim.hester@rstudio.com>
 Repository: CRAN
-Date/Publication: 2021-09-14 14:20:02 UTC
+Date/Publication: 2021-11-10 16:20:02 UTC

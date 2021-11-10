@@ -54,11 +54,11 @@ read_all_zip <- function(file, ...) {
 }
 
 ## ---- eval = as.logical(Sys.getenv("NOT_CRAN", "false"))----------------------
-#  file <- "https://raw.githubusercontent.com/r-lib/vroom/master/inst/extdata/mtcars.csv"
+#  file <- "https://raw.githubusercontent.com/r-lib/vroom/main/inst/extdata/mtcars.csv"
 #  vroom(file)
 
 ## ---- eval = as.logical(Sys.getenv("NOT_CRAN", "false"))----------------------
-#  file <- "https://raw.githubusercontent.com/r-lib/vroom/master/inst/extdata/mtcars.csv.gz"
+#  file <- "https://raw.githubusercontent.com/r-lib/vroom/main/inst/extdata/mtcars.csv.gz"
 #  vroom(file)
 
 ## -----------------------------------------------------------------------------
