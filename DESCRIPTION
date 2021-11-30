@@ -1,10 +1,10 @@
 Package: vroom
 Title: Read and Write Rectangular Text Data Quickly
-Version: 1.5.6
+Version: 1.5.7
 Authors@R: 
     c(person(given = "Jim",
              family = "Hester",
-             role = c("aut", "cre"),
+             role = "aut",
              email = "jim.hester@rstudio.com",
              comment = c(ORCID = "0000-0002-2739-7082")),
       person(given = "Hadley",
@@ -12,6 +12,11 @@ Authors@R:
              role = "aut",
              email = "hadley@rstudio.com",
              comment = c(ORCID = "0000-0003-4757-117X")),
+      person(given = "Jennifer",
+             family = "Bryan",
+             role = c("aut", "cre"),
+             email = "jenny@rstudio.com",
+             comment = c(ORCID = "0000-0002-6983-2759")),
       person(given = "https://github.com/mandreyel/",
              role = "cph",
              comment = "mio library"),
@@ -52,13 +57,14 @@ Language: en-US
 RoxygenNote: 7.1.2
 SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2021-11-10 15:34:06 UTC; jhester
-Author: Jim Hester [aut, cre] (<https://orcid.org/0000-0002-2739-7082>),
+Packaged: 2021-11-29 22:18:11 UTC; jhester
+Author: Jim Hester [aut] (<https://orcid.org/0000-0002-2739-7082>),
   Hadley Wickham [aut] (<https://orcid.org/0000-0003-4757-117X>),
+  Jennifer Bryan [aut, cre] (<https://orcid.org/0000-0002-6983-2759>),
   https://github.com/mandreyel/ [cph] (mio library),
   Jukka Jylänki [cph] (grisu3 implementation),
   Mikkel Jørgensen [cph] (grisu3 implementation),
   RStudio [cph, fnd]
-Maintainer: Jim Hester <jim.hester@rstudio.com>
+Maintainer: Jennifer Bryan <jenny@rstudio.com>
 Repository: CRAN
-Date/Publication: 2021-11-10 16:20:02 UTC
+Date/Publication: 2021-11-30 14:20:06 UTC
