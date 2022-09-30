@@ -2,7 +2,8 @@ is_ascii_compatible <- function(encoding) {
   identical(iconv(list(charToRaw("\n")), from = "ASCII", to = encoding, toRaw = TRUE)[[1]], charToRaw("\n"))
 }
 
-reencode_path <- function(path, encoding) {
+# this is about the encoding of the file (contents), not the filepath
+reencode_file <- function(path, encoding) {
   if (length(path) > 1) {
     stop(sprintf("Reading files of encoding '%s' can only be done for single files at a time", encoding), call. = FALSE)
   }
@@ -59,7 +60,7 @@ standardise_path <- function(path) {
     }
   }
 
-  as.list(path)
+  as.list(enc2utf8(path))
 }
 
 standardise_one_path <- function (path, write = FALSE) {
@@ -95,10 +96,12 @@ standardise_one_path <- function (path, write = FALSE) {
     )
   }
 
-  p <- split_path_ext(basename(path))
+  path <- enc2utf8(path)
+
+  p <- split_path_ext(basename_utf8(path))
 
   if (write) {
-    path <- normalizePath(path, mustWork = FALSE)
+    path <- normalizePath_utf8(path, mustWork = FALSE)
   } else {
     path <- check_path(path)
   }
@@ -219,8 +222,9 @@ is_url <- function(path) {
 }
 
 check_path <- function(path) {
-  if (file.exists(path))
-    return(normalizePath(path, "/", mustWork = FALSE))
+  if (file.exists(path)) {
+    return(normalizePath_utf8(path, mustWork = FALSE))
+  }
 
   stop("'", path, "' does not exist",
     if (!is_absolute_path(path)) {
@@ -256,7 +260,7 @@ chr_to_file <- function(x, envir = parent.frame()) {
 
   withr::defer(unlink(out), envir = envir)
 
-  normalizePath(out)
+  normalizePath_utf8(out)
 }
 
 detect_compression <- function(path) {
@@ -309,4 +313,12 @@ detect_compression <- function(path) {
   }
 
   NA_character_
+}
+
+basename_utf8 <- function(path) {
+  enc2utf8(basename(path))
+}
+
+normalizePath_utf8 <- function(path, winslash = "/", mustWork = NA) {
+  enc2utf8(normalizePath(path, winslash = winslash, mustWork = mustWork))
 }

@@ -360,9 +360,13 @@ vroom_select <- function(x, col_select, id) {
   # reorder and rename columns
   if (inherits(col_select, "quosures") || !rlang::quo_is_null(col_select)) {
     if (inherits(col_select, "quosures")) {
-      vars <- tidyselect::vars_select(c(id, names(spec(x)$cols)), !!!col_select)
+      vars <- tidyselect::vars_select(c(names(spec(x)$cols), id), !!!col_select)
     } else {
-      vars <- tidyselect::vars_select(c(id, names(spec(x)$cols)), !!col_select)
+      vars <- tidyselect::vars_select(c(names(spec(x)$cols), id), !!col_select)
+    }
+    if (!is.null(id) && !id %in% vars) {
+      names(id) <- id
+      vars <- c(id, vars)
     }
     # This can't be just names(x) as we need to have skipped
     # names as well to pass to vars_select()
@@ -535,7 +539,7 @@ summary.col_spec <- function(object, width = getOption("width"), locale = defaul
   }
 
   type_map <- c("collector_character" = "chr", "collector_double" = "dbl",
-    "collector_integer" = "int", "collector_num" = "num", "collector_logical" = "lgl",
+    "collector_integer" = "int", "collector_number" = "num", "collector_logical" = "lgl",
     "collector_factor" = "fct", "collector_datetime" = "dttm", "collector_date" = "date",
     "collector_time" = "time",
     "collector_guess" = "???")

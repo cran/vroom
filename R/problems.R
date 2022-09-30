@@ -10,19 +10,30 @@
 #'   `FALSE` (the default) the lazy data is first read completely and all
 #'   problems are returned.
 #' @return A data frame with one row for each problem and four columns:
-#'   - row,col - Row and column of problem
+#'   - row,col - Row and column number that caused the problem, referencing the
+#'   original input
 #'   - expected - What vroom expected to find
 #'   - actual - What it actually found
 #'   - file - The file with the problem
 #' @export
-problems <- function(x, lazy = FALSE) {
+problems <- function(x = .Last.value, lazy = FALSE) {
+  if(!inherits(x, "tbl_df")) {
+    cli::cli_abort(c(
+      "The {.arg x} argument of {.fun vroom::problems} must be a data frame created by vroom:",
+      x = "{.arg x} has class {.cls {class(x)}}"
+    ))
+  }
+
   if (!isTRUE(lazy)) {
     vroom_materialize(x, replace = FALSE)
   }
 
   probs <- attr(x, "problems")
   if (typeof(probs) != "externalptr") {
-    rlang::abort("`x` must have a problems attribute that is an external pointer.\n  Is this object from readr and not vroom?")
+    cli::cli_abort(c(
+      "The {.arg x} argument of {.fun vroom::problems} must be a data frame created by vroom:",
+      x = "{.arg x} seems to have been created with something else, maybe readr?"
+    ))
   }
   probs <- vroom_errors_(probs)
   probs <- probs[!duplicated(probs), ]

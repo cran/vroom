@@ -4,7 +4,7 @@
 \alias{problems}
 \title{Retrieve parsing problems}
 \usage{
-problems(x, lazy = FALSE)
+problems(x = .Last.value, lazy = FALSE)
 }
 \arguments{
 \item{x}{A data frame from \code{vroom::vroom()}.}
@@ -16,7 +16,8 @@ problems are returned.}
 \value{
 A data frame with one row for each problem and four columns:
 \itemize{
-\item row,col - Row and column of problem
+\item row,col - Row and column number that caused the problem, referencing the
+original input
 \item expected - What vroom expected to find
 \item actual - What it actually found
 \item file - The file with the problem

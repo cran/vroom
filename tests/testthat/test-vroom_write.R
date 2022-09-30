@@ -32,15 +32,6 @@ test_that("strings are only quoted if needed", {
   expect_equal(ssv, 'a\n,\n')
 })
 
-test_that("a literal NA is quoted", {
-  expect_equal(vroom_format(data.frame(x = "NA")), "x\n\"NA\"\n")
-})
-
-test_that("na argument modifies how missing values are written", {
-  df <- data.frame(x = c(NA, "x", "."), y = c(1, 2, NA))
-  expect_equal(vroom_format(df, ",", na = "."), "x,y\n.,1\nx,2\n\".\",.\n")
-})
-
 test_that("read_delim/csv/tsv and write_delim round trip special chars", {
   x <- stats::setNames(list("a", '"', ",", "\n","at\t"), paste0("V", seq_len(5)))
 
@@ -202,9 +193,27 @@ test_that("vroom_write equals the same thing as vroom_format", {
   expect_equal(readChar(tf, file.info(tf)$size), vroom_format(df))
 })
 
+test_that("vroom_format handles empty data frames", {
+  df <- data.frame()
+  expect_equal(vroom_format(df), "")
+
+  df <- data.frame(a = 1:2, b = 2:3)
+  df <- df[0, ]
+  expect_equal(vroom_format(df), "a\tb\n")
+})
+
+test_that("vroom_write() / vroom_read() roundtrips an empty data frame", {
+  df <- tibble::tibble()
+  t <- tempfile(fileext = ".csv")
+  on.exit(unlink(t))
+
+  vroom_write(df, t)
+  expect_equal(vroom(t, show_col_types = FALSE), df)
+})
+
 test_that("vroom_write(append = TRUE) works with R connections", {
   df <- data.frame(x = 1, y = 2)
-  f <- tempfile(, fileext = ".tsv.gz")
+  f <- tempfile(fileext = ".tsv.gz")
   on.exit(unlink(f))
 
   vroom::vroom_write(df, f)
@@ -216,7 +225,7 @@ test_that("vroom_write(append = TRUE) works with R connections", {
 test_that("vroom_write() works with an empty delimiter", {
   df <- data.frame(x = "foo", y = "bar")
 
-  f <- tempfile(, fileext = ".tsv.gz")
+  f <- tempfile(fileext = ".tsv.gz")
   on.exit(unlink(f))
 
   vroom::vroom_write(df, f, delim = "")
@@ -224,7 +233,7 @@ test_that("vroom_write() works with an empty delimiter", {
 })
 
 test_that("vroom_write_lines() works with empty", {
-  f <- tempfile(, fileext = ".txt")
+  f <- tempfile(fileext = ".txt")
   on.exit(unlink(f))
 
   vroom::vroom_write_lines(character(), f)
@@ -232,7 +241,7 @@ test_that("vroom_write_lines() works with empty", {
 })
 
 test_that("vroom_write_lines() works with normal input", {
-  f <- tempfile(, fileext = ".txt")
+  f <- tempfile(fileext = ".txt")
   on.exit(unlink(f))
 
   vroom::vroom_write_lines(c("foo", "bar"), f)
@@ -240,7 +249,7 @@ test_that("vroom_write_lines() works with normal input", {
 })
 
 test_that("vroom_write_lines() does not escape or quote lines", {
-  f <- tempfile(, fileext = ".txt")
+  f <- tempfile(fileext = ".txt")
   on.exit(unlink(f))
 
   vroom::vroom_write_lines(c('"foo"', "bar"), f)
@@ -268,4 +277,46 @@ test_that("vroom_write() always outputs in UTF-8", {
   actual_data <- readBin(f, "raw", file.size(f))
 
   expect_equal(actual_data, expected_data)
+})
+
+test_that("vroom_format() does not quote strings that start with the `na` string (#426)", {
+  names_df <- tibble::tibble(x = c(NA, "NA", "NATHAN", "JONAH"))
+
+  simple_output <- vroom_format(names_df)
+  expect_equal(
+    simple_output,
+    "x\nNA\nNA\nNATHAN\nJONAH\n"
+  )
+
+  output_unique_NA <- vroom_format(names_df, na = "JON")
+  expect_equal(
+    output_unique_NA,
+    "x\nJON\nNA\nNATHAN\nJONAH\n"
+  )
+
+  output_roundtrip <- vroom(
+    I(vroom_format(names_df)),
+    delim = ",",
+    show_col_types = FALSE
+  )
+  expect_equal(output_roundtrip, names_df)
+})
+
+test_that("na argument modifies how missing values are written", {
+  df <- data.frame(x = c(NA, "x"), y = c(1, 2))
+  expect_equal(vroom_format(df, ",", na = "None"), "x,y\nNone,1\nx,2\n")
+})
+
+test_that("vroom_write() does not overwrite file when appending empty data frame", {
+  tf <- withr::local_tempfile()
+  data <- tibble::tibble(
+    a = "1",
+    b = "2",
+    c = "3"
+  )
+
+  vroom_write(data, file = tf, delim = ",")
+  vroom_write(data.frame(), file = tf, append = TRUE, delim = ",")
+
+  expect_equal(vroom_lines(tf, altrep = FALSE), c("a,b,c", "1,2,3"))
 })

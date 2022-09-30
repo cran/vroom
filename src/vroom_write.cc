@@ -76,9 +76,6 @@ size_t get_buffer_size(
 }
 
 bool needs_quote(const char* str, const char delim, const char* na_str) {
-  if (strncmp(str, na_str, 2) == 0) {
-    return true;
-  }
 
   for (const char* cur = str; *cur != '\0'; ++cur) {
     if (*cur == '\n' || *cur == '\r' || *cur == '"' || *cur == delim) {
@@ -322,11 +319,13 @@ std::vector<char> get_header(
       out.push_back(delim);
     }
   }
-  if (delim != '\0') {
-    out.pop_back();
-  }
-  for (auto c : eol) {
-    out.push_back(c);
+  if(out.size() != 0) {
+    if (delim != '\0') {
+      out.pop_back();
+    }
+    for (auto c : eol) {
+      out.push_back(c);
+    }
   }
   return out;
 }

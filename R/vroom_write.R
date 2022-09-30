@@ -6,8 +6,10 @@
 #'   - `double` - quotes are escaped by doubling them.
 #'   - `backslash` - quotes are escaped by a preceding backslash.
 #'   - `none` - quotes are not escaped.
-#' @param quote How to handle fields which contain characters that need to be quoted.
-#'   - `needed` - Only quote fields which need them.
+#' @param quote How to handle fields which contain characters that need to be
+#'   quoted.
+#'   - `needed` - Values are only quoted if needed: if they contain a delimiter,
+#'     quote, or newline.
 #'   - `all` - Quote all fields.
 #'   - `none` - Never quote fields.
 #' @param bom If `TRUE` add a UTF-8 BOM at the beginning of the file. This is
@@ -46,6 +48,7 @@ vroom_write <- function(x, file, delim = '\t', eol = "\n", na = "NA", col_names 
     )
   }
 
+  input <- x
 
   quote <- match.arg(quote)
   escape <- match.arg(escape)
@@ -55,33 +58,37 @@ vroom_write <- function(x, file, delim = '\t', eol = "\n", na = "NA", col_names 
   # Standardise path returns a list, but we will only ever have 1 output file.
   file <- standardise_one_path(file, write = TRUE)
 
-  # If there are no columns in the data frame, just create an empty file and return
   if (NCOL(x) == 0) {
-    if (!inherits(file, "connection")) {
+    if (!append && !inherits(file, "connection")) {
+      # if file already exists, it is overwritten with an empty file!
       file.create(file)
     }
-    return(invisible(x))
+    return(invisible(input))
   }
-
-  # We need to convert any altrep vectors to normal vectors otherwise we can't fill the
-  # write buffers from other threads.
-  xx <- vroom_convert(x)
-  xx[] <- lapply(xx, output_column)
 
   # This seems to work ok in practice
   buf_lines <- max(as.integer(Sys.getenv("VROOM_WRITE_BUFFER_LINES", nrow(x) / 100 / num_threads)), 1)
 
+  # Run `output_column()` before `vroom_convert()` to ensure that any ALTREP
+  # vectors created by `output_column()` will be fully materialized (#389)
+  x[] <- lapply(x, output_column)
+
+  # We need to convert any altrep vectors to normal vectors otherwise we can't fill the
+  # write buffers from other threads. This should be the last manipulation done
+  # to `x` before writing to ensure that no new altrep vectors are created.
+  x <- vroom_convert(x)
+
   if (inherits(file, "connection")) {
-    vroom_write_connection_(xx, file, delim, eol, na_str = na, col_names = col_names,
+    vroom_write_connection_(x, file, delim, eol, na_str = na, col_names = col_names,
       options = opts, num_threads = num_threads, progress = progress, buf_lines = buf_lines,
       is_stdout = file == stdout(), append = append)
   } else {
-    vroom_write_(xx, file, delim, eol, na_str = na, col_names = col_names,
+    vroom_write_(x, file, delim, eol, na_str = na, col_names = col_names,
       append = append, options = opts,
       num_threads = num_threads, progress = progress, buf_lines = buf_lines)
   }
 
-  invisible(x)
+  invisible(input)
 }
 
 
@@ -119,6 +126,12 @@ vroom_format <- function(x, delim = "\t", eol = "\n", na = "NA", col_names = TRU
                          bom = FALSE,
                          num_threads = vroom_threads()) {
 
+  stopifnot(is.data.frame(x))
+
+  if (NCOL(x) == 0) {
+    return("")
+  }
+
   quote <- match.arg(quote)
   escape <- match.arg(escape)
 
@@ -134,6 +147,7 @@ vroom_format <- function(x, delim = "\t", eol = "\n", na = "NA", col_names = TRU
 
 #' Write lines to a file
 #'
+#' @param x A character vector.
 #' @inheritParams vroom_write
 #' @export
 vroom_write_lines <- function(x, file, eol = "\n", na = "NA", append = FALSE, num_threads = vroom_threads()) {

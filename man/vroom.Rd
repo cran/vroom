@@ -31,7 +31,18 @@ vroom(
 )
 }
 \arguments{
-\item{file}{path to a local file.}
+\item{file}{Either a path to a file, a connection, or literal data (either a
+single string or a raw vector).
+
+Files ending in \code{.gz}, \code{.bz2}, \code{.xz}, or \code{.zip} will be automatically
+uncompressed. Files starting with \verb{http://}, \verb{https://}, \verb{ftp://}, or
+\verb{ftps://} will be automatically downloaded. Remote gz files can also be
+automatically downloaded and decompressed.
+
+Literal data is most useful for examples and tests. To be recognised as
+literal data, the input must be either wrapped with \code{I()}, be a string
+containing at least one new line, or be a vector containing at least one
+string with a new line.}
 
 \item{delim}{One or more characters used to delimit fields within a
 file. If \code{NULL} the delimiter is guessed from the set of \code{c(",", "\\t", " ", "|", ":", ";")}.}
@@ -52,17 +63,17 @@ in with dummy names \code{...1}, \code{...2} etc. Duplicate column names
 will generate a warning and be made unique, see \code{name_repair} to control
 how this is done.}
 
-\item{col_types}{One of \code{NULL}, a \code{\link[readr:cols]{cols()}} specification, or
-a string. See \code{vignette("readr")} for more details.
+\item{col_types}{One of \code{NULL}, a \code{\link[=cols]{cols()}} specification, or
+a string.
 
 If \code{NULL}, all column types will be imputed from \code{guess_max} rows
 on the input interspersed throughout the file. This is convenient (and
 fast), but not robust. If the imputation fails, you'll need to increase
 the \code{guess_max} or supply the correct types yourself.
 
-Column specifications created by \code{\link[=list]{list()}} or \code{\link[readr:cols]{cols()}} must contain
+Column specifications created by \code{\link[=list]{list()}} or \code{\link[=cols]{cols()}} must contain
 one column specification for each column. If you only want to read a
-subset of the columns, use \code{\link[readr:cols]{cols_only()}}.
+subset of the columns, use \code{\link[=cols_only]{cols_only()}}.
 
 Alternatively, you can use a compact string representation where each
 character represents one column:
@@ -84,9 +95,12 @@ message showing what \code{readr} guessed they were. To remove this message,
 set \code{show_col_types = FALSE} or set `options(readr.show_col_types = FALSE).
 }}
 
-\item{col_select}{One or more selection expressions, like in
-\code{dplyr::select()}. Use \code{c()} or \code{list()} to use more than one expression.
-See \code{?dplyr::select} for details on available selection options.}
+\item{col_select}{Columns to include in the results. You can use the same
+mini-language as \code{dplyr::select()} to refer to the columns by name. Use
+\code{c()} to use more than one selection expression. Although this
+usage is less common, \code{col_select} also accepts a numeric column index. See
+\code{\link[tidyselect:language]{?tidyselect::language}} for full details on the
+selection language.}
 
 \item{id}{Either a string or 'NULL'. If a string, the output will contain a
 variable with that name with the filename(s) as the value. If 'NULL', the
@@ -123,11 +137,12 @@ to add special characters like \verb{\\\\n}.}
 
 \item{locale}{The locale controls defaults that vary from place to place.
 The default locale is US-centric (like R), but you can use
-\code{\link[readr:locale]{locale()}} to create your own locale that controls things like
+\code{\link[=locale]{locale()}} to create your own locale that controls things like
 the default time zone, encoding, decimal mark, big mark, and day/month
 names.}
 
-\item{guess_max}{Maximum number of lines to use for guessing column types.}
+\item{guess_max}{Maximum number of lines to use for guessing column types.
+See \code{vignette("column-types", package = "readr")} for more details.}
 
 \item{altrep}{Control which column types use Altrep representations,
 either a character vector of types, \code{TRUE} or \code{FALSE}. See
@@ -149,10 +164,22 @@ column specifications are always show, if \code{FALSE} they are never shown. If
 \code{NULL} (the default) they are shown only if an explicit specification is not
 given to \code{col_types}.}
 
-\item{.name_repair}{Handling of column names. By default, vroom ensures
-column names are not empty and unique. See \code{.name_repair} as documented in
-\code{\link[tibble:tibble]{tibble::tibble()}} for additional options including supplying user defined
-name repair functions.}
+\item{.name_repair}{Handling of column names. The default behaviour is to
+ensure column names are \code{"unique"}. Various repair strategies are
+supported:
+\itemize{
+\item \code{"minimal"}: No name repair or checks, beyond basic existence of names.
+\item \code{"unique"} (default value): Make sure names are unique and not empty.
+\item \code{"check_unique"}: no name repair, but check they are \code{unique}.
+\item \code{"universal"}: Make the names \code{unique} and syntactic.
+\item A function: apply custom name repair (e.g., \code{name_repair = make.names}
+for names in the style of base R).
+\item A purrr-style anonymous function, see \code{\link[rlang:as_function]{rlang::as_function()}}.
+}
+
+This argument is passed on as \code{repair} to \code{\link[vctrs:vec_as_names]{vctrs::vec_as_names()}}.
+See there for more details on these terms and the strategies used
+to enforce them.}
 }
 \description{
 Read a delimited file into a tibble
@@ -172,7 +199,7 @@ vroom(input_file)
 
 \dontrun{
 # Including remote paths
-vroom("https://github.com/r-lib/vroom/raw/main/inst/extdata/mtcars.csv")
+vroom("https://github.com/tidyverse/vroom/raw/main/inst/extdata/mtcars.csv")
 }
 
 # Or directly from a string with `I()`
@@ -187,7 +214,7 @@ vroom(input_file, col_select = c(1, 3, 11))
 vroom(input_file, col_select = starts_with("d"))
 
 # You can also rename specific columns
-vroom(input_file, col_select = list(car = model, everything()))
+vroom(input_file, col_select = c(car = model, everything()))
 
 # Column types --------------------------------------------------------------
 # By default, vroom guesses the columns types, looking at 1000 rows
