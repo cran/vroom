@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -105,58 +105,58 @@ make_table <- function(data) {
 
 desc <- c("setup", "read", "print", "head", "tail", "sample", "filter", "aggregate")
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, echo = FALSE, message = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, echo = FALSE, message = FALSE----
 taxi <- read_benchmark(path_package("vroom", "bench", "taxi.tsv"), desc)
 
 plot_benchmark(taxi, "Time to analyze taxi trip data")
 
 make_table(taxi)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 all_num <- read_benchmark(path_package("vroom", "bench", "all_numeric-long.tsv"), desc)
 
 plot_benchmark(all_num, "Time to analyze long all numeric data")
 
 make_table(all_num)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 all_num_wide <- read_benchmark(path_package("bench", "all_numeric-wide.tsv", package = "vroom"), desc)
 
 plot_benchmark(all_num_wide, "Time to analyze wide all numeric data")
 
 make_table(all_num_wide)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 all_chr <- read_benchmark(path_package("vroom", "bench", "all_character-long.tsv"), desc)
 
 plot_benchmark(all_chr, "Time to analyze long all character data")
 
 make_table(all_chr)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 all_chr_wide <- read_benchmark(path_package("vroom", "bench", "all_character-wide.tsv"), desc)
 
 plot_benchmark(all_chr_wide, "Time to analyze wide all character data")
 
 make_table(all_chr_wide)
 
-## ---- echo = FALSE, message = FALSE, eval = TRUE------------------------------
+## ----echo = FALSE, message = FALSE, eval = TRUE-------------------------------
 mult <- read_benchmark(path_package("vroom", "bench", "taxi_multiple.tsv"), desc)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 plot_benchmark(mult, "Time to analyze multiple file data")
 
 make_table(mult)
 
-## ---- echo = FALSE, message = FALSE, eval = TRUE------------------------------
+## ----echo = FALSE, message = FALSE, eval = TRUE-------------------------------
 fwf <- read_benchmark(path_package("vroom", "bench", "fwf.tsv"), desc)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 plot_benchmark(fwf, "Time to analyze fixed width data")
 
 make_table(fwf)
 
-## ---- fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
+## ----fig.height = 8, fig.width=10, warning = FALSE, message = FALSE, echo = FALSE----
 taxi_writing <- read_benchmark(path_package("vroom", "bench", "taxi_writing.tsv"), c("setup", "writing")) %>%
   rename(
     package = reading_package,
@@ -184,7 +184,7 @@ taxi_writing %>%
   arrange(desc(compression)) %>%
   knitr::kable(digits = 2, align = "r", format = "html")
 
-## ---- echo = FALSE, warning = FALSE, message = FALSE--------------------------
+## ----echo = FALSE, warning = FALSE, message = FALSE---------------------------
 si <- vroom::vroom(path_package("vroom", "bench", "session_info.tsv"))
 class(si) <- c("packages_info", "data.frame")
 select(as.data.frame(si), package, version = ondiskversion, date, source) %>%

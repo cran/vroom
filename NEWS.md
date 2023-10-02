@@ -1,8 +1,16 @@
+# vroom 1.6.4
+
+* It is now possible (again?) to read from a list of connections (@bairdj, #514).
+
+* Internal change for compatibility with cpp11 >= 0.4.6 (@DavisVaughan, #512).
+
 # vroom 1.6.3
+
+* No user-facing changes.
 
 # vroom 1.6.2
 
-* No user-facing changes.
+* There was no CRAN release with this version number.
 
 # vroom 1.6.1
 

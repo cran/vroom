@@ -32,7 +32,8 @@ vroom(
 }
 \arguments{
 \item{file}{Either a path to a file, a connection, or literal data (either a
-single string or a raw vector).
+single string or a raw vector). \code{file} can also be a character vector
+containing multiple filepaths or a list containing multiple connections.
 
 Files ending in \code{.gz}, \code{.bz2}, \code{.xz}, or \code{.zip} will be automatically
 uncompressed. Files starting with \verb{http://}, \verb{https://}, \verb{ftp://}, or
@@ -40,9 +41,7 @@ uncompressed. Files starting with \verb{http://}, \verb{https://}, \verb{ftp://}
 automatically downloaded and decompressed.
 
 Literal data is most useful for examples and tests. To be recognised as
-literal data, the input must be either wrapped with \code{I()}, be a string
-containing at least one new line, or be a vector containing at least one
-string with a new line.}
+literal data, wrap the input with \code{I()}.}
 
 \item{delim}{One or more characters used to delimit fields within a
 file. If \code{NULL} the delimiter is guessed from the set of \code{c(",", "\\t", " ", "|", ":", ";")}.}
@@ -92,7 +91,7 @@ character represents one column:
 
 By default, reading a file without a column specification will print a
 message showing what \code{readr} guessed they were. To remove this message,
-set \code{show_col_types = FALSE} or set `options(readr.show_col_types = FALSE).
+set \code{show_col_types = FALSE} or set \code{options(readr.show_col_types = FALSE)}.
 }}
 
 \item{col_select}{Columns to include in the results. You can use the same
@@ -239,4 +238,10 @@ mtcars_by_cyl
 
 # Pass the filenames directly to vroom, they are efficiently combined
 vroom(mtcars_by_cyl)
+
+# If you need to extract data from the filenames, use `id` to request a
+# column that reveals the underlying file path
+dat <- vroom(mtcars_by_cyl, id = "source")
+dat$source <- basename(dat$source)
+dat
 }

@@ -1,7 +1,8 @@
 #' Read a delimited file into a tibble
 #'
 #' @param file Either a path to a file, a connection, or literal data (either a
-#'   single string or a raw vector).
+#'   single string or a raw vector). `file` can also be a character vector
+#'   containing multiple filepaths or a list containing multiple connections.
 #'
 #'   Files ending in `.gz`, `.bz2`, `.xz`, or `.zip` will be automatically
 #'   uncompressed. Files starting with `http://`, `https://`, `ftp://`, or
@@ -9,9 +10,7 @@
 #'   automatically downloaded and decompressed.
 #'
 #'   Literal data is most useful for examples and tests. To be recognised as
-#'   literal data, the input must be either wrapped with `I()`, be a string
-#'   containing at least one new line, or be a vector containing at least one
-#'   string with a new line.
+#'   literal data, wrap the input with `I()`.
 #' @param delim One or more characters used to delimit fields within a
 #'   file. If `NULL` the delimiter is guessed from the set of `c(",", "\t", " ",
 #'   "|", ":", ";")`.
@@ -58,7 +57,7 @@
 #'
 #'    By default, reading a file without a column specification will print a
 #'    message showing what `readr` guessed they were. To remove this message,
-#'    set `show_col_types = FALSE` or set `options(readr.show_col_types = FALSE).
+#'    set `show_col_types = FALSE` or set `options(readr.show_col_types = FALSE)`.
 #' @param id Either a string or 'NULL'. If a string, the output will contain a
 #'   variable with that name with the filename(s) as the value. If 'NULL', the
 #'   default, no variable will be created.
@@ -180,6 +179,12 @@
 #'
 #' # Pass the filenames directly to vroom, they are efficiently combined
 #' vroom(mtcars_by_cyl)
+#'
+#' # If you need to extract data from the filenames, use `id` to request a
+#' # column that reveals the underlying file path
+#' dat <- vroom(mtcars_by_cyl, id = "source")
+#' dat$source <- basename(dat$source)
+#' dat
 vroom <- function(
   file,
   delim = NULL,
