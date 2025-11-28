@@ -43,7 +43,7 @@ filenames <- unzip(zip_file, list = TRUE)$Name
 filenames
 
 # imagine we only want to read 2 of the 3 files
-vroom(purrr::map(filenames[c(1, 3)], ~ unz(zip_file, .x)))
+vroom(purrr::map(filenames[c(1, 3)], \(x) unz(zip_file, x)))
 
 ## ----eval = as.logical(Sys.getenv("NOT_CRAN", "false"))-----------------------
 # file <- "https://raw.githubusercontent.com/tidyverse/vroom/main/inst/extdata/mtcars.csv"
@@ -114,7 +114,7 @@ vroom(
 ## ----eval = FALSE-------------------------------------------------------------
 # vroom(
 #   vroom_example("mtcars.csv"),
-#   .name_repair = ~ janitor::make_clean_names(., case = "all_caps")
+#   .name_repair = \(x) janitor::make_clean_names(x, case = "all_caps")
 # )
 
 ## -----------------------------------------------------------------------------
